@@ -40,3 +40,30 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+#botao{
+    background-color: rgb(212, 205, 205);
+    padding: 15px 40px;
+    font-size: 20px;
+    border-radius: 10px;
+}
+
+#botao:hover{
+    background-color:rgb(196, 194, 194);
+    transform: scale(1.05)
+}
+
+#button{
+    background-color: rgb(212, 205, 205);
+    padding: 10px 20px;
+    font-size: 20px;
+    border-radius: 10px;
+    position: absolute;
+    left: 3%; 
+    top: 90%;
+
+}
+
+#button:hover{
+    background-color: #6888b3;
+    transform: scale(1.05)
+}

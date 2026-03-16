@@ -2,7 +2,9 @@ body {
     margin: 0;
     font-family: Arial;
     background-color: #2f6394;
+    background-size: cover;
     color: black;
+    overflow-x: hidden;
 }
 
 .dark {
@@ -78,6 +80,10 @@ th, td {
 .btn4 {
     position: absolute; left: 50%; top: 806px;
 }
+.btn5 {
+    position: absolute; left: 94%; top: 876px;
+
+}
 
 .botoes {
     margin-top: 20px;
@@ -92,7 +98,6 @@ button {
     padding: 12px 25px;
     border-radius: 8px;
     font-size: 15px;
-    cursor: pointer;
     transition: 0.3s;
 }
 

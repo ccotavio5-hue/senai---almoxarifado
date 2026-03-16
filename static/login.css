@@ -11,3 +11,14 @@ body{
     border-radius: 8px;
 }
 
+#botao:hover{
+    transform: scale(1.05);
+
+}
+
+#botao {
+    background-color: rgb(60, 97, 165);
+    padding: 15px 40px;
+    font-size: 20px;
+    border-radius: 10px;
+}

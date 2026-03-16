@@ -13,10 +13,7 @@ function mudarTema() {
     }
 }
 
-function alerta() {
-    Swal.fire({
-  title: "Item Adicionado com Sucesso!",
-  icon: "success",
-  draggable: true
-});
+
+function info(){
+    alert ("Essa é a pagina de Estoque, aqui você consegue ver os itens armazenados até o momento")
 }

@@ -1,12 +1,10 @@
 function verificarLogin() {
 
-  const usuario = document.getElementById("usuario").value;
-  const senha = document.getElementById("senha").value;
-
-  const usuarioCorreto = "1";
-  const senhaCorreta = "2";
-
-  if (usuario === usuarioCorreto && senha === senhaCorreta) {
+  if (
+    document.getElementById("usuario").value == "1"
+    &&
+    document.getElementById("senha").value == "2"
+  ){ 
 
     window.location.href = "estoque.html";
 
@@ -18,7 +16,6 @@ function verificarLogin() {
       text: 'Usuário ou senha incorretos!',
       confirmButtonColor: '#3c61a5'
     });
-
   }
-
 }
+
