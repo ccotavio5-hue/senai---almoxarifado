@@ -1,55 +1,6 @@
 CREATE DATABASE tcc;
 USE tcc;
 
-CREATE TABLE administrador (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario VARCHAR(180) NOT NULL,
-    senha VARCHAR(255)
-
-);
-
-CREATE TABLE usuario (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario VARCHAR(180) NOT NULL,
-    senha VARCHAR(255)
-);
-
-CREATE TABLE estoque (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    nome VARCHAR(255),
-    categoria VARCHAR(255),
-    descricao VARCHAR(255),
-    preco DOUBLE,
-    quantidade INT,
-    estoque_min INT,
-    imagem VARCHAR(500)
-);
-
-CREATE TABLE saidas (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    item VARCHAR(255) NOT NULL,
-    qtde INT,
-    descricao VARCHAR(255),
-    preco DOUBLE,
-    categoria VARCHAR(255),
-    estoque_min INT
-);
-
-UPDATE estoque SET imagem = 'faparuso.jpg' WHERE id = 1;
-
-SELECT * FROM usuario;
-SELECT * FROM administrador;
-SELECT * FROM estoque;
-SELECT * FROM saidas;
-
-DROP DATABASE tcc;
-
-
-===================================
-
-CREATE DATABASE tcc;
-USE tcc;
-
 CREATE TABLE estoque (
     id INT AUTO_INCREMENT PRIMARY KEY,
     item VARCHAR(255),
@@ -62,11 +13,18 @@ CREATE TABLE historico (
     item VARCHAR(255),
     quantidade INT,
     pessoa VARCHAR(255),
-    data_hora DATETIME DEFAULT NOW()
+    data_hora DATETIME DEFAULT now()
+);
+
+CREATE TABLE usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(255) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    tipo ENUM('adm', 'usuario') NOT NULL
 );
 
 SELECT * FROM estoque
-
 SELECT * FROM historico
+SELECT * FROM usuarios
 
 DROP DATABASE tcc;

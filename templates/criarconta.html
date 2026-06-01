@@ -13,15 +13,14 @@
     <div id="cima"></div>
     <a id="cc"> Cadastre-se</a>
 
-     <p id="caixa1"><input type="text" id="usuario" placeholder="Digite seu Usuário"></p>
-
-<br><br><br>
-
-    <p id="caixa2" style="text-align: center;"><input type="password" id="senha" placeholder="Digite sua senha"></p>
-
+<form method="POST" action="/criarconta">
+    <p id="caixa1"><input id="usuario" type="text" name="usuario" placeholder="Digite seu Usuário"></p>
+    <br><br><br>
+    <p id="caixa2" style="text-align: center;"><input id="senha" type="password" name="senha" placeholder="Digite sua senha"></p>
     <div style="display: flex;justify-content: center ;">
-   <button id="botao" button class="btn btn-outline-primary">Criar</button>
-</div>
+        <button id="botao" type="submit" class="btn btn-outline-primary">Criar</button>
+    </div>
+</form>
 
     <img src="static/branquinho.png"
     style="width: 250px; position: absolute;right: 2%;top: -2%;">
