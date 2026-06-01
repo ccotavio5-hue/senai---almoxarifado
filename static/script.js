@@ -12,8 +12,3 @@ function mudarTema() {
         }
     }
 }
-
-
-function info(){
-    alert ("Essa é a pagina de Estoque, aqui você consegue ver os itens armazenados até o momento")
-}

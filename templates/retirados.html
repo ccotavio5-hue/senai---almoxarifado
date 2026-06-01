@@ -5,14 +5,36 @@
     <title>Itens Retirados</title>
     <link rel="stylesheet" href="static/style.css">
     <script src="static/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </head>
 
 <body>
 
-    <div class="topo">
-        <h1>Itens Retirados do Estoque</h1>
-        <img src="static/Sistema-Fiep-Azul.png" height="70px"class="logo">
+<div>
+    <nav id="oi" class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a id="tt" class="navbar-brand" href="estoque.html">Estoque</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="adicionar.html">Adicionar  </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="retirar.html">Retirar  </a>
+        </li>
+        <li class="nav-item">
+          <a style="color: aliceblue;" class="nav-link active" aria-current="page" href="retirados.html">Histórico</a>
+        </li>
+      </ul>
     </div>
+  </div>
+</nav>
+</div>
 
     <div class="container">
 
@@ -21,25 +43,24 @@
                 <th>ITEM</th>
                 <th>QUANTIDADE</th>
                 <th>PESSOA</th>
-                <th>HORÁRIO</th>
-                
+                <th>DATA</th> 
+                <th></th>             
             </tr>
 
-            <tr><td>Makita</td><td>1</td><td>Otávio</td><td>7:30</td></tr>
-            <tr><td>Furadeiras</td><td>2</td><td>Vinicius</td><td>9:40</td></tr>
-            <tr><td>Chave de fenda</td><td>3</td><td>Leonardo</td><td>10:20</td></tr>
-            <tr><td>Parafusos</td><td>4</td><td>Yuri</td><td>10:50</td></tr>
-            <tr><td>Plástico</td><td>5</td><td>Roger</td><td>11:30</td></tr>
+            {% for registro in historico %}
+<tr>
+    <td>{{ registro[0] }}</td>
+    <td>{{ registro[1] }}</td>
+    <td>{{ registro[2] }}</td>
+    <td>{{ registro[3] }}</td>
+</tr>
+{% endfor %}
         </table>
 
         <div class="botoes">
 
-            <button onclick="mudarTema()" id="botaoTema">
-                🌙 Modo Escuro
-            </button>
-
-            <a href="estoque.html">
-                <button>VOLTAR</button>
+            <a id="test" href="estoque.html">
+                <button style="border-radius: 10px;">VOLTAR</button>
             </a>
 
         </div>

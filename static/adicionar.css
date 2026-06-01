@@ -20,7 +20,7 @@ body {
     height: 90px;
 }
 
-#item, #quantidade {
+#item, #quantidade, #descricao {
     width: 300px;
     height: 40px;
     padding: 10px;
@@ -34,11 +34,6 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-.texto2{
-    text-align: center;
-    font-size: large;
-    font-family: Arial, Helvetica, sans-serif;
-}
 
 #botao{
     background-color: rgb(212, 205, 205);

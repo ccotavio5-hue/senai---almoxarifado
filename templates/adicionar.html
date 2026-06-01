@@ -14,26 +14,38 @@
         <h1>Adicionar Itens</h1>
         <img src="static/novalogo1.png"  class="logo">
     </div>
-<br><br><br><br><br><br><br><br>
+<br><br><br><br>
 
     <div class="texto">
        <h2>Nome do item:</h2>
     </div>
 
-    <p style="text-align: center;"><input type="text" id="item" placeholder="Digite o nome do item"></p>
+
+<form method="POST" action="adicionar.html">
+
+
+    <p style="text-align: center;"><input type="text" id="item" name="item" placeholder="Digite o nome do item"></p>
+
+        <br><br>
+<div class="texto">
+    <h2>Descrição:</h2>
+</div>
+
+    <p class="caixa" style="text-align: center;"><input type="text" id="descricao" name="descricao" placeholder="Digite a descrição"></p>
 
 <br><br>
-    <div class="texto2">
+    <div class="texto">
        <h2>Quantidade:</h2>
     </div>
-    <p class="caixa" style="text-align: center;"><input type="number" id="quantidade" placeholder="Digite a quantidade"></p>
+    <p class="caixa" style="text-align: center;"><input type="number" id="quantidade" name="quantidade" placeholder="Digite a quantidade"></p>
+
 
 <br><br><br>
 
     <div style="display: flex;justify-content: center ;">
-        <button id="botao" onclick="alerta()" button class="btn btn-outline-primary">Adicionar</button>
+        <button type="submit" id="botao" onclick="alerta()" button class="btn btn-outline-primary">Adicionar</button>
     </div>
-
+</form>
     <a href="estoque.html">
         <button id="button" button class="btn btn-outline-primary">⬅</button>
    </a>

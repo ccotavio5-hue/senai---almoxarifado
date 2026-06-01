@@ -5,70 +5,66 @@
     <title>Estoque</title>
     <link rel="stylesheet" href="static/style.css">
     <script src="static/script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </head>
 
 <body>
 
-    <div class="topo">
-        <h1>Estoque de Itens</h1>
-        <img src="static/Sistema-Fiep-Azul.png"  class="logo">
+<div>
+    <nav id="oi" class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a style="color: aliceblue;" id="tt" class="navbar-brand" href="estoque.html">Estoque</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="adicionar.html">Adicionar  </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="retirar.html">Retirar  </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="retirados.html">Histórico</a>
+        </li>
+      </ul>
     </div>
+  </div>
+</nav>
+</div>
+
+  <img src="static/branquinho.png"
+    style="width: 250px; position: absolute;right: 1%;top: -4%;">
 
     <div class="container">
 
         <table>
             <tr>
-                <th>PEÇAS</th>
+                <th>ID</th>
+                <th>ITEM</th>
+                <th>DESCRIÇÃO</th>
                 <th>QUANTIDADE</th>
+                
             </tr>
 
-            <tr><td>Parafusos</td><td>6</td></tr>
-            <tr><td>Porcas</td><td>4</td></tr>
-            <tr><td>Chaves</td><td>4</td></tr>
-            <tr><td>Furadeira</td><td>2</td></tr>
-            <tr><td>Chave inglesa</td><td>3</td></tr>
-            <tr><td>Plástico</td><td>5</td></tr>
-            <tr><td>Cabos</td><td>20</td></tr>
-            <tr><td>Martelos</td><td>5</td></tr>
-            <tr><td>Fitas</td><td>8</td></tr>
-            <tr><td>MAKITA</td><td>0</td></tr>
-            <tr><td>Aço</td><td>3</td></tr>
-            <tr><td>Arduíno</td><td>7</td></tr>
-            <tr><td>Impressora</td><td>2</td></tr>
+            {% for produto in produto %}
+
+              <tr>
+               <td>{{ produto[0] }}</td>
+               <td>{{ produto[1] }}</td>
+               <td>{{ produto[2] }}</td>
+               <td>{{ produto[3] }}</td>
+              </tr>
+
+               {% endfor %}
+               
         </table>
 
-        <div class="btn1">
-            <a href="retirados.html">
-                <button>HISTÓRICO</button>
-            </a>
-        </div>
-
-        <div class="btn2">
-            <a href="adicionar.html">
-                <button>ADICIONAR</button>
-            </a>
-        </div>
-
-        <div class="btn3">
-            <a href="retirar.html">
-                <button>RETIRAR</button>
-            </a>
-        </div>
-
-        <div class="btn4">
-            <a href="devolver.html">
-                <button>DEVOLVER</button>
-            </a>
-        </div>
-
-        <div class="btn5" onclick="info()">
-            <button style="background-color:rgb(182, 182, 182) ;">info</button>
-        </a>
-        </div>
 
     </div>
-
 
 </body>
 </html>

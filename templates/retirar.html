@@ -14,25 +14,37 @@
         <h1>Retirar Itens</h1>
         <img src="static/novalogo1.png"  class="logo">
     </div>
-<br><br><br><br><br><br><br><br>
+<br><br><br><br>
 
     <div class="texto">
        <h2>Nome do item:</h2>
     </div>
 
-    <p style="text-align: center;"><input type="text" id="item" placeholder="Digite o nome do item"></p>
+    <form method="POST" action="retirar.html">
 
+
+    <p style="text-align: center;"><input type="text" id="item" name="id" placeholder="Digite o nome do item"></p>
+
+    <br><br>
+<div class="texto">
+    <h2>Seu Nome:</h2>
+</div>
+
+    <p class="caixa" style="text-align: center;"><input type="text" id="pessoa" name="pessoa" placeholder="Digite o seu nome"></p>
+    
 <br><br>
-    <div class="texto2">
+    <div class="texto">
        <h2>Quantidade:</h2>
     </div>
-    <p class="caixa" style="text-align: center;"><input type="number" id="quantidade" placeholder="Digite a quantidade"></p>
+    <p class="caixa" style="text-align: center;"><input type="number" id="quantidade" name="quantidade" placeholder="Digite a quantidade"></p>
+
 
 <br><br><br>
 
-<div style="display: flex;justify-content: center ;">
-   <button id="botao" onclick="alerta()" button class="btn btn-outline-primary">Retirar</button>
-</div>
+    <div style="display: flex;justify-content: center ;">
+        <button type="submit" id="botao" onclick="alerta()" button class="btn btn-outline-primary">Retirar</button>
+    </div>
+</form>
 
 <a href="estoque.html">
     <button id="button" button class="btn btn-outline-primary">⬅</button>
