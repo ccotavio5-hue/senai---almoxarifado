@@ -13,8 +13,8 @@ def conectar():
         database="tcc"
     )
 
-@app.route('/verificar_adm', methods=['POST'])
-def verificar_adm():
+@app.route('/adm', methods=['POST'])
+def adm():
     dados = request.get_json()
     USUARIO_ADM = 'admin'
     SENHA_ADM = 'cenai'
@@ -149,4 +149,4 @@ def devolver():
     return render_template("devolver.html")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', debug=True)

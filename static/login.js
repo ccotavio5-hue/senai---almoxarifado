@@ -43,7 +43,7 @@ function verificarAdm() {
         return;
     }
 
-    fetch('/verificar_adm', {
+    fetch('/adm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario, senha })
