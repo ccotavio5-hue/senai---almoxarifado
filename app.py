@@ -9,7 +9,7 @@ def conectar():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="1234",
+        password="",
         database="tcc"
     )
 
@@ -144,12 +144,9 @@ def retirar():
 
     return render_template("retirar.html")
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
 @app.route('/devolver.html')
 def devolver():
     return render_template("devolver.html")
 
-if __name__== '__main__':
-    app.run(host='0.0.0.0', debug=True)     
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
