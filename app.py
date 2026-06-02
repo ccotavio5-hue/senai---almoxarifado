@@ -2,9 +2,18 @@ from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.utils import secure_filename
 import mysql.connector
 import os
+import bcrypt
 
 app = Flask(__name__)
 app.secret_key = 'senha_super_secreta'
+
+
+def gerar_hash(senha):
+    return bcrypt.hashpw(senha.encode(), bcrypt.gensalt()).decode()
+
+def verificar_senha(senha, hash_salvo):
+    return bcrypt.checkpw(senha.encode(), hash_salvo.encode())
+
 
 def banco():
     return mysql.connector.connect(
@@ -69,24 +78,23 @@ def fazer_login():
     conexao = banco()
     cursor = conexao.cursor()
 
-    # Verifica na tabela administrador
-    cursor.execute("SELECT * FROM administrador WHERE usuario = %s AND senha = %s", (usuario, senha))
+    cursor.execute("SELECT id, usuario, senha FROM administrador WHERE usuario = %s", (usuario,))
     adm = cursor.fetchone()
 
-    if adm:
+    if adm and verificar_senha(senha, adm[2]):
         session['usuario'] = usuario
         session['tipo'] = 'adm'
         cursor.close()
         conexao.close()
         return jsonify({'sucesso': True, 'redirect': '/estoque.html'})
 
-    # Verifica na tabela usuario
-    cursor.execute("SELECT * FROM usuario WHERE usuario = %s AND senha = %s", (usuario, senha))
+    cursor.execute("SELECT id, usuario, senha FROM usuario WHERE usuario = %s", (usuario,))
     user = cursor.fetchone()
+
     cursor.close()
     conexao.close()
 
-    if user:
+    if user and verificar_senha(senha, user[2]):
         session['usuario'] = usuario
         session['tipo'] = 'user'
         return jsonify({'sucesso': True, 'redirect': '/estoque.html'})
@@ -105,17 +113,27 @@ def fazer_login():
 @app.route('/adm', methods=['POST'])
 def adm():
     dados = request.get_json()
+
     usuario = dados['usuario']
     senha = dados['senha']
 
     conexao = banco()
     cursor = conexao.cursor()
-    cursor.execute("SELECT * FROM administrador WHERE usuario = %s AND senha = %s", (usuario, senha))
+
+    cursor.execute(
+        "SELECT id, usuario, senha FROM administrador WHERE usuario = %s",
+        (usuario,)
+    )
+
     adm = cursor.fetchone()
+
     cursor.close()
     conexao.close()
 
-    if adm:
+    if adm and bcrypt.checkpw(
+        senha.encode(),
+        adm[2].encode()
+    ):
         session['adm_verificado'] = True
         return jsonify({'sucesso': True})
 
@@ -124,7 +142,7 @@ def adm():
         'alerta': {
             'icon': 'error',
             'titulo': 'Acesso Negado!',
-            'texto': 'Você não tem permissão para criar contas!'
+            'texto': 'Usuário ou senha inválidos!'
         }
     })
 
@@ -134,6 +152,7 @@ def adm():
 def salvar_conta():
     usuario = request.form['usuario']
     senha = request.form['senha']
+    senha_hash = gerar_hash(senha)
 
     conexao = banco()
     cursor = conexao.cursor()
@@ -150,7 +169,7 @@ def salvar_conta():
         </script>
         """
 
-    cursor.execute("INSERT INTO usuario (usuario, senha) VALUES (%s, %s)", (usuario, senha))
+    cursor.execute("INSERT INTO usuario (usuario, senha) VALUES (%s, %s)", (usuario, senha_hash))
     conexao.commit()
     cursor.close()
     conexao.close()

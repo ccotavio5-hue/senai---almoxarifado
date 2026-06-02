@@ -1,5 +1,12 @@
 import bcrypt
 
-senha = b"otavio"  
-hash = bcrypt.hashpw(senha, bcrypt.gensalt()).decode()
-print(hash)
+usuario = "roger"
+senha = "senhaloka"
+
+hash_senha = bcrypt.hashpw(
+    senha.encode(),
+    bcrypt.gensalt()
+).decode()
+
+print("Usuário:", usuario)
+print("Hash:", hash_senha)
