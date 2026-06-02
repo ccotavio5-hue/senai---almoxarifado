@@ -188,7 +188,6 @@ def salvar_item():
     item = request.form['item']
     quantidade = int(request.form['quantidade'])
     descricao = request.form['descricao']
-
     arquivo = request.files['imagem']
     nome_arquivo = secure_filename(arquivo.filename)
 
