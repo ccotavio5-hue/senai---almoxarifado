@@ -2,63 +2,69 @@ body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
     color: rgb(224, 233, 230);
-    background-image: url(fundo10.png);
+    background-image: url('./ft/novof1.png');
     background-size: 100%;
     background-repeat: no-repeat;
-}
-
-.topo {
-    background-color: #043677;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .logo {
     width: 170px;
     height: 90px;
 }
-
-#item, #quantidade, #descricao {
-    width: 300px;
-    height: 40px;
-    padding: 10px;
+ 
+#item, #quantidade, #descricao, #foto {
+    width: 300px ;
+    height: 40px ;
+    padding: 10px ;
     font-size: 16px;
-    border-radius: 8px;
+    border-radius: 8px ;
+    border: none ;
+    background-color: rgb(224, 233, 230);
+    color: #333 ;
 }
-
+ 
 .texto{
     text-align: center;
     font-size: large;
     font-family: Arial, Helvetica, sans-serif;
 }
-
-
+ 
 #botao{
     background-color: rgb(212, 205, 205);
-    padding: 15px 40px;
-    font-size: 20px;
+    padding: 15px 40px ;
+    font-size: 20px ;
     border-radius: 10px;
+    border: none ;
+    color: black;
 }
 
+.topo {
+    background-color: #FB9203;
+    padding: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+ 
 #botao:hover{
-    background-color:rgb(196, 194, 194);
-    transform: scale(1.05)
+    background-color: rgb(196, 194, 194);
+    transform: scale(1.05);
 }
-
+ 
 #button{
-    background-color: rgb(212, 205, 205);
-    padding: 10px 20px;
-    font-size: 20px;
-    border-radius: 10px;
+    background-color: rgb(212, 205, 205) ;
+    padding: 10px 20px ;
+    font-size: 20px ;
+    border-radius: 10px ;
+    border: none ;
+    color: black;
     position: absolute;
     left: 3%; 
     top: 90%;
-
 }
-
+ 
 #button:hover{
     background-color: #6888b3;
-    transform: scale(1.05)
+    transform: scale(1.05);
 }

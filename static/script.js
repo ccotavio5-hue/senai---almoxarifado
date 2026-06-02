@@ -1,14 +1,8 @@
-function mudarTema() {
-
-    document.body.classList.toggle("dark");
-
-    let botao = document.getElementById("botaoTema");
-
-    if (botao) {
-        if (document.body.classList.contains("dark")) {
-            botao.innerHTML = "☀ Modo Claro";
-        } else {
-            botao.innerHTML = "🌙 Modo Escuro";
-        }
-    }
+function verImagem(imagem){
+    Swal.fire({
+        imageUrl: '/static/uploads/' + imagem,
+        imageWidth: 400,
+        imageHeight: 300,
+        confirmButtonText: 'Fechar'
+    });
 }

@@ -3,7 +3,7 @@ body {
     color: black;
     overflow-x: hidden;
     margin: 0;
-    background-image: url('novof1.png');
+    background-image: url('./ft/novof1.png');
 }
 
 .logo {
@@ -54,7 +54,7 @@ button {
 
 button:hover {
     background-color: #1f4a70;
-    transform: scale(1.05);
+    transform: scale(1.15);
 }
 .container-fluid {
    color: #000000;
@@ -80,4 +80,11 @@ button:hover {
     font-size: 30px;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
     font-style: italic;
+}
+
+#ftn{
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
 }

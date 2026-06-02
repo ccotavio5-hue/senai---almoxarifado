@@ -11,39 +11,46 @@
 </head>
 <body>
     <div class="topo">
-        <h1>Adicionar Itens</h1>
-        <img src="static/novalogo1.png"  class="logo">
+        <h1 style="color: rgb(255, 255, 255);">Adicionar Itens</h1>
+        <img src="./static/ft/novalogo1.png"  class="logo">
     </div>
-<br><br><br><br>
+
+
+
+<br><br>
+
 
     <div class="texto">
        <h2>Nome do item:</h2>
     </div>
 
 
-<form method="POST" action="adicionar.html">
+<form action="/adicionar" method="POST" enctype="multipart/form-data">
 
 
     <p style="text-align: center;"><input type="text" id="item" name="item" placeholder="Digite o nome do item"></p>
 
-        <br><br>
+        <br>
 <div class="texto">
     <h2>Descrição:</h2>
 </div>
 
     <p class="caixa" style="text-align: center;"><input type="text" id="descricao" name="descricao" placeholder="Digite a descrição"></p>
 
-<br><br>
+<br>
     <div class="texto">
        <h2>Quantidade:</h2>
     </div>
     <p class="caixa" style="text-align: center;"><input type="number" id="quantidade" name="quantidade" placeholder="Digite a quantidade"></p>
-
-
-<br><br><br>
+    <br>
+    <div class="texto">
+       <h2>URL da Foto:</h2>
+    </div>
+     <p class="caixa" style="text-align: center;"><input type="file" id="foto" name="imagem" accept="image/*" enctype="multipart/form-data"  placeholder=" Insira a URL da foto" required></p>
+    <br><br>
 
     <div style="display: flex;justify-content: center ;">
-        <button type="submit" id="botao" onclick="alerta()" button class="btn btn-outline-primary">Adicionar</button>
+        <button type="submit" id="botao" button class="btn btn-outline-primary">Adicionar</button>
     </div>
 </form>
     <a href="estoque.html">

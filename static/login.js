@@ -1,13 +1,20 @@
+// Função genérica para mostrar alertas vindos do Flask
+function mostrarAlerta(alerta) {
+    Swal.fire({
+        icon: alerta.icon,
+        title: alerta.titulo,
+        text: alerta.texto
+    });
+}
+
+// ==================== LOGIN ====================
+
 async function verificarLogin() {
     const usuario = document.getElementById('usuario').value;
     const senha = document.getElementById('senha').value;
 
     if (!usuario || !senha) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Atenção!',
-            text: 'Preencha todos os campos!',
-        });
+        mostrarAlerta({ icon: 'warning', titulo: 'Atenção!', texto: 'Preencha todos os campos!' });
         return;
     }
 
@@ -22,42 +29,32 @@ async function verificarLogin() {
     if (dados.sucesso) {
         window.location.href = dados.redirect;
     } else {
-        Swal.fire({
-            icon: 'error',
-            title: 'Erro!',
-            text: 'Usuário ou senha incorretos!',
-        });
+        mostrarAlerta(dados.alerta);
     }
 }
 
-function verificarAdm() {
+// ==================== ADM ====================
+
+async function verificarAdm() {
     const usuario = document.getElementById('usuario').value;
     const senha = document.getElementById('senha').value;
 
     if (!usuario || !senha) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Atenção!',
-            text: 'Preencha o usuário e a senha antes de acessar o cadastro ADM!',
-        });
+        mostrarAlerta({ icon: 'warning', titulo: 'Atenção!', texto: 'Preencha o usuário e a senha antes de acessar o cadastro ADM!' });
         return;
     }
 
-    fetch('/adm', {
+    const resposta = await fetch('/adm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario, senha })
-    })
-    .then(res => res.json())
-    .then(dados => {
-        if (dados.sucesso) {
-            window.location.href = '/criarconta.html';
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Acesso Negado!',
-                text: 'Você não tem permissão para criar contas!',
-            });
-        }
     });
+
+    const dados = await resposta.json();
+
+    if (dados.sucesso) {
+        window.location.href = '/criarconta.html';
+    } else {
+        mostrarAlerta(dados.alerta);
+    }
 }
