@@ -88,3 +88,30 @@ button:hover {
     font-size: 20px;
     cursor: pointer;
 }
+
+#botao1{
+    background-color: rgb(212, 205, 205);
+    padding: 10px 30px ;
+    font-size: 20px ;
+    border-radius: 10px;
+    border: none ;
+    color: black;
+    position: relative;
+    top: 8px;
+    left: 10px;
+
+}
+
+#botao2{
+    background-color: rgb(212, 205, 205);
+    padding: 10px 30px ;
+    font-size: 20px ;
+    border-radius: 10px;
+    border: none ;
+    color: black;
+    position: relative;
+    top: 15px;
+    left: 10px;
+    
+
+}

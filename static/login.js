@@ -1,4 +1,3 @@
-// Função genérica para mostrar alertas vindos do Flask
 function mostrarAlerta(alerta) {
     Swal.fire({
         icon: alerta.icon,
