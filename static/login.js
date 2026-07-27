@@ -6,7 +6,7 @@ function mostrarAlerta(alerta) {
     });
 }
 
-// ==================== LOGIN ====================
+// login
 
 async function verificarLogin() {
     const usuario = document.getElementById('usuario').value;
@@ -32,7 +32,7 @@ async function verificarLogin() {
     }
 }
 
-// ==================== ADM ====================
+// adm
 
 async function verificarAdm() {
     const usuario = document.getElementById('usuario').value;

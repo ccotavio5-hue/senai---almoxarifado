@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = 'senha_super_secreta'
 
 
-# ========== PÁGINA DE LOGIN ==========
+# pagina de login
 
 @app.route('/')
 def login():
@@ -43,7 +43,7 @@ def fazer_login():
             conexao.close()
             return jsonify({'sucesso': True, 'redirect': '/estoque.html'})
 
-    # se não for administrador, verifica se é usuário comum
+    # se não for administrador, verifica se é so usuario
     cursor.execute("SELECT id, usuario, senha FROM usuario WHERE usuario = %s", (usuario,))
     user = cursor.fetchone()
 
@@ -67,7 +67,7 @@ def fazer_login():
     })
 
 
-# ========== VERIFICAR SENHA DO ADMINISTRADOR ==========
+# verifica se é adm
 
 @app.route('/adm', methods=['POST'])
 def adm():
@@ -103,7 +103,7 @@ def adm():
     })
 
 
-# ========== CRIAR CONTA ==========
+# criar conta
 
 @app.route('/criarconta.html')
 def criarconta():
@@ -154,7 +154,7 @@ def salvar_conta():
     """
 
 
-# ========== ESTOQUE ==========
+# estoque
 
 @app.route('/estoque.html')
 def estoque():
@@ -172,7 +172,7 @@ def estoque():
     return render_template("estoque.html", produto=produto)
 
 
-# ========== ADICIONAR ITEM ==========
+# adicionar item
 
 @app.route('/adicionar.html')
 def adicionar():
@@ -231,7 +231,7 @@ def salvar_item():
     """
 
 
-# ========== RETIRAR ITEM ==========
+# retirar item do estoque
 
 @app.route('/retirar.html')
 def retirar():
@@ -252,7 +252,6 @@ def salvar_retirada():
     )
     cursor = conexao.cursor()
 
-    # busca o nome do item pelo id escolhido
     cursor.execute("SELECT item FROM estoque WHERE id = %s", (item_id,))
     resultado = cursor.fetchone()
 
@@ -282,7 +281,7 @@ def salvar_retirada():
     """
 
 
-# ========== HISTÓRICO DE RETIRADAS ==========
+# histiroco retirados
 
 @app.route('/retirados.html')
 def retirados():
@@ -379,7 +378,6 @@ def apagar_estoque():
     </script>
     """
 
-# ========== INICIAR O SITE ==========
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
