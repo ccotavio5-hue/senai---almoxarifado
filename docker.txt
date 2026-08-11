@@ -1,0 +1,29 @@
+docker network create rede_almox
+
+ docker volume create mysql_dados
+
+ docker pull mysql:8.0
+
+docker create --name db_almox --network rede_almox -v volume_almox:/var/lib/mysql -v "${PWD}:/docker-endpoint-initdb.d" -e MYSQL_ROOT_PASSWORD=root mysql
+
+docker run -d --name db_almox --network rede_almox -v volume_almox:/var/lib/mysql -v "${PWD}:/docker-entrypoint-initdb.d" -e MYSQL_ROOT_PASSWORD=root mysql
+
+docker create --name app_app --network rede_almox -P 5000:5000 -v "${PWD}:/app" -e DB_HOST=db_almox -e DB_PASSWORD=root imagem_almox
+
+docker build -t imagem_almox
+
+--docker--
+
+docker login
+
+docker images
+
+docker build -t imagem_almox 
+
+docker tag imagem_almox:latest joao123/imagem_almox:latest
+
+docker push joao123/imagem_almox:latest
+
+BAIXAR IMG 
+
+docker pull otaviocruzcardozo/imagem_almox:latest
