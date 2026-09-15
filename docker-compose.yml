@@ -1,0 +1,35 @@
+services:
+  app:
+    build: .
+    container_name: app_almox
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db_almox
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: tcc
+      SECRET_KEY: uma_chave_secreta
+    depends_on:
+      db_almox:
+        condition: service_healthy
+
+  db_almox:
+    image: mysql:8.0
+    container_name: db_almox
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tcc
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./schemas.sql:/docker-entrypoint-initdb.d/schemas.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql_data:

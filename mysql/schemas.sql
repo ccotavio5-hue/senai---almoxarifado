@@ -23,14 +23,14 @@ CREATE TABLE IF NOT EXISTS administrador (
     senha VARCHAR(250)
 );
 
-CREATE TABLE IF NOT EXISTS usuario (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario VARCHAR(180) NOT NULL,
-    senha VARCHAR(255)
-);
-
 INSERT INTO administrador (usuario, senha)
 VALUES (
     'roger',
     '$2b$12$4traD3hZntpE1sjyW1HDr.y0GDOdmaKha23.5/mwo6N/PsDnjuC12'
+);
+
+CREATE TABLE IF NOT EXISTS usuario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(180) NOT NULL,
+    senha VARCHAR(255)
 );

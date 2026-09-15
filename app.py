@@ -11,15 +11,23 @@ app = Flask(__name__)
 # Chave da sessão
 app.secret_key = os.getenv("SECRET_KEY", "senha_super_secreta")
 
+def conectar_bd():
+    return mysql.connector.connect(
+        host=os.getenv('DB_HOST','localhost'),
+        user='root',
+        password=os.getenv('DB_PASWORD',''),
+        database='tcc'
+    )
+
 
 # Configuração do banco de dados
+
 conexao = {
-    "host": os.getenv("DB_HOST", "mysql"),
+    "host": os.getenv("DB_HOST", "localhost"),
     "user": os.getenv("DB_USER", "root"),
     "password": os.getenv("DB_PASSWORD", ""),
     "database": os.getenv("DB_NAME", "tcc")
 }
-
 
 def conectar():
     return mysql.connector.connect(**conexao)
@@ -514,14 +522,90 @@ def apagar_estoque():
     </script>
     """
 
+# =========================================================
+# ROTA NOVA DO ESTOQUE
+# =========================================================
+
+@app.route('/api/produtos', methods=['GET'])
+def api_listar_produtos():
+    try:
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+        
+        cursor.execute("SELECT id, item, descricao, quantidade, imagem FROM estoque")
+        produtos = cursor.fetchall()
+        
+        cursor.close()
+        conexao.close()
+        
+        return jsonify({
+            'sucesso': True,
+            'total': len(produtos),
+            'itens': produtos
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'erro': str(e)
+        }), 500
+    
+
+@app.route('/api/adicionar', methods=['POST'])
+def api_adicionar_item():
+    try:
+        dados = request.get_json() or {}
+        
+        item = dados.get('item')
+        quantidade = dados.get('quantidade')
+        descricao = dados.get('descricao', '')
+        imagem = dados.get('imagem', 'padrao.png')
+
+        # Validação dos campos obrigatórios
+        if not item or quantidade is None:
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': 'Os campos "item" e "quantidade" são obrigatórios!'
+            }), 400
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+        # Verifica se o item já existe no banco
+        cursor.execute("SELECT id FROM estoque WHERE item = %s", (item,))
+        existe = cursor.fetchone()
+
+        if existe:
+            # Se existe, apenas soma a quantidade enviada
+            cursor.execute(
+                "UPDATE estoque SET quantidade = quantidade + %s WHERE item = %s", 
+                (quantidade, item)
+            )
+        else:
+            # Se não existe, insere o novo produto
+            cursor.execute(
+                "INSERT INTO estoque (item, descricao, quantidade, imagem) VALUES (%s, %s, %s, %s)",
+                (item, descricao, quantidade, imagem)
+            )
+
+        conexao.commit()
+        cursor.close()
+        conexao.close()
+
+        return jsonify({
+            'sucesso': True, 
+            'mensagem': 'Item cadastrado/atualizado com sucesso!'
+        }), 201
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False, 
+            'erro': str(e)
+        }), 500
 
 # =========================================================
 # INICIAR SERVIDOR
 # =========================================================
 
 if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=True
-    )
+    app.run(host='0.0.0.0', port=5000, debug=True)
