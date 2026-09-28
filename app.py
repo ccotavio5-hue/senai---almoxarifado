@@ -15,7 +15,7 @@ def conectar_bd():
     return mysql.connector.connect(
         host=os.getenv('DB_HOST','localhost'),
         user='root',
-        password=os.getenv('DB_PASWORD',''),
+        password=os.getenv('DB_PASWORD','1234'),
         database='tcc'
     )
 
@@ -25,7 +25,7 @@ def conectar_bd():
 conexao = {
     "host": os.getenv("DB_HOST", "localhost"),
     "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
+    "password": os.getenv("DB_PASSWORD", "1234"),
     "database": os.getenv("DB_NAME", "tcc")
 }
 
@@ -602,6 +602,161 @@ def api_adicionar_item():
             'sucesso': False, 
             'erro': str(e)
         }), 500
+
+
+
+@app.route('/api/retirar', methods=['DELETE'])
+def api_retirar_simplificado():
+    dados = request.get_json()
+
+    item_id = dados['id']
+    quantidade = int(dados['quantidade'])
+    pessoa = dados['pessoa']
+
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    # 1. Pega o nome e a quantidade atual do produto
+    cursor.execute("SELECT item, quantidade FROM estoque WHERE id = %s", (item_id,))
+    produto = cursor.fetchone()
+
+    if not produto:
+        cursor.close()
+        conexao.close()
+        return jsonify({'sucesso': False, 'mensagem': 'Item não encontrado!'}), 404
+
+    nome_item, qtd_atual = produto
+
+    # 2. Atualiza ou Deleta do estoque
+    if qtd_atual <= quantidade:
+        cursor.execute("DELETE FROM estoque WHERE id = %s", (item_id,))
+    else:
+        cursor.execute("UPDATE estoque SET quantidade = quantidade - %s WHERE id = %s", (quantidade, item_id))
+
+    # 3. Salva no histórico
+    cursor.execute(
+        "INSERT INTO historico (item, quantidade, pessoa) VALUES (%s, %s, %s)",
+        (nome_item, quantidade, pessoa)
+    )
+
+    conexao.commit()
+    cursor.close()
+    conexao.close()
+
+    return jsonify({'sucesso': True, 'mensagem': 'Retirada realizada com sucesso!'}), 200
+
+
+
+@app.route('/api/historico', methods=['GET'])
+def api_listar_historico():
+    conexao = conectar()
+    cursor = conexao.cursor(dictionary=True)
+
+    # Busca todos os registos do histórico ordenados pelos mais recentes
+    cursor.execute(
+        "SELECT id, item, quantidade, pessoa, data_hora FROM historico ORDER BY id DESC"
+    )
+    historico = cursor.fetchall()
+
+    cursor.close()
+    conexao.close()
+
+    return jsonify({
+        'sucesso': True,
+        'total': len(historico),
+        'historico': historico
+    }), 200
+
+
+
+@app.route('/api/adm', methods=['POST'])
+def api_verificar_adm():
+    dados = request.get_json()
+    usuario = dados['usuario']
+    senha = dados['senha']
+
+    conexao = conectar()
+    cursor = conexao.cursor(dictionary=True)
+
+    cursor.execute("SELECT id, usuario, senha FROM administrador WHERE usuario = %s", (usuario,))
+    adm = cursor.fetchone()
+
+    cursor.close()
+    conexao.close()
+
+    if adm and bcrypt.checkpw(senha.encode(), adm['senha'].encode()):
+        session['adm_verificado'] = True
+        return jsonify({'sucesso': True, 'mensagem': 'Acesso de Administrador confirmado!'}), 200
+
+    return jsonify({'sucesso': False, 'mensagem': 'Acesso Negado!'}), 401
+
+
+
+@app.route('/api/criarconta', methods=['POST'])
+def api_criar_conta():
+    dados = request.get_json()
+
+    usuario = dados['usuario']
+    senha = dados['senha']
+
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    # Verifica se o utilizador já existe
+    cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (usuario,))
+    if cursor.fetchone():
+        cursor.close()
+        conexao.close()
+        return jsonify({'sucesso': False, 'mensagem': 'Este nome de utilizador já existe!'}), 400
+
+    # Criptografa a senha
+    senha_hash = bcrypt.hashpw(senha.encode(), bcrypt.gensalt()).decode()
+
+    # Regista o novo utilizador
+    cursor.execute("INSERT INTO usuario (usuario, senha) VALUES (%s, %s)", (usuario, senha_hash))
+    conexao.commit()
+
+    cursor.close()
+    conexao.close()
+
+    return jsonify({'sucesso': True, 'mensagem': 'Conta criada com sucesso!'}), 201
+
+
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    dados = request.get_json()
+
+    usuario = dados['usuario']
+    senha = dados['senha']
+
+    conexao = conectar()
+    cursor = conexao.cursor(dictionary=True)
+
+    # 1. Tenta encontrar no Administrador
+    cursor.execute("SELECT id, usuario, senha FROM administrador WHERE usuario = %s", (usuario,))
+    adm = cursor.fetchone()
+
+    if adm and bcrypt.checkpw(senha.encode(), adm['senha'].encode()):
+        session['usuario'] = usuario
+        session['tipo'] = 'adm'
+        cursor.close()
+        conexao.close()
+        return jsonify({'sucesso': True, 'mensagem': 'Login de Administrador efetuado!', 'tipo': 'adm'}), 200
+
+    # 2. Tenta encontrar no Usuário comum
+    cursor.execute("SELECT id, usuario, senha FROM usuario WHERE usuario = %s", (usuario,))
+    user = cursor.fetchone()
+
+    cursor.close()
+    conexao.close()
+
+    if user and bcrypt.checkpw(senha.encode(), user['senha'].encode()):
+        session['usuario'] = usuario
+        session['tipo'] = 'user'
+        return jsonify({'sucesso': True, 'mensagem': 'Login de Utilizador efetuado!', 'tipo': 'user'}), 200
+
+    return jsonify({'sucesso': False, 'mensagem': 'Utilizador ou senha incorretos!'}), 401
 
 # =========================================================
 # INICIAR SERVIDOR
