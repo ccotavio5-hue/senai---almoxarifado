@@ -1,0 +1,69 @@
+body {
+    background-size: 100%, 10%;
+    color: black;
+    overflow-x: hidden;
+    margin: 0;
+    background-image: url('./ft/novof1.png');
+}
+
+.logo {
+    width: 200px;
+    height: 80px;
+}
+
+.container {
+    width: 80%;
+    margin: 40px auto;
+    background-color: #e6e6e6;
+    padding: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+
+th {
+    background-color: #d9d9d9;
+}
+
+ table,th, td {
+    border: 1px solid #000000;
+    padding: 12px;
+    text-align: center;
+}
+
+.container-fluid {
+   color: #000000;
+}
+
+#navbarNav{
+    background-attachment: #FB9203;
+    height: 80px;
+    font-size: 30px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-style: italic;
+    position: relative;
+}
+#oi{
+    padding: 0%;
+}
+
+.container-fluid{
+    background-color: #FB9203;
+}
+
+#tt{
+    font-size: 30px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-style: italic;
+}
+
+#ftn{
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}

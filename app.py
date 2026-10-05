@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_template, request, redirect, session, jsonify, Response
 from werkzeug.utils import secure_filename
 import mysql.connector
 import os
@@ -448,45 +448,58 @@ def retirados():
 
 @app.route('/importarcsv', methods=['POST'])
 def importar_csv():
+    arquivo = request.files.get('arquivo')
+    
+    if not arquivo:
+        return """
+        <script>
+            alert("Nenhum arquivo enviado!");
+            window.location.href="/estoque.html";
+        </script>
+        """
 
-    arquivo = request.files['arquivo']
+    # Lê o conteúdo do arquivo
+    conteudo_texto = arquivo.stream.read().decode("utf-8")
+    
+    # Detecta automaticamente se o CSV usa ';' ou ',' como separador
+    separador = ';' if ';' in conteudo_texto else ','
+    
+    conteudo = conteudo_texto.splitlines()
+    leitor = csv.reader(conteudo, delimiter=separador)
+
+    # Ignora a primeira linha (cabeçalho)
+    next(leitor, None)
 
     conexao = conectar()
     cursor = conexao.cursor()
 
-    leitor = csv.reader(
-        arquivo.stream
-        .read()
-        .decode("utf-8")
-        .splitlines()
-    )
-
-    # Ignora o cabeçalho
-    next(leitor)
-
     for linha in leitor:
+        # Pula linhas vazias
+        if not linha:
+            continue
 
-        item = linha[0]
-        descricao = linha[1]
-        quantidade = int(linha[2])
-        imagem = linha[3]
+        item = linha[0] if len(linha) > 0 else ''
+        descricao = linha[1] if len(linha) > 1 else ''
+        
+        # Converte a quantidade com segurança
+        try:
+            quantidade = int(linha[2]) if len(linha) > 2 else 0
+        except ValueError:
+            quantidade = 0
 
-        cursor.execute(
-            """
-            INSERT INTO estoque
-            (item, descricao, quantidade, imagem)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (
-                item,
-                descricao,
-                quantidade,
-                imagem
+        imagem = linha[3] if len(linha) > 3 else ''
+
+        # Insere se tiver pelo menos o nome do item
+        if item:
+            cursor.execute(
+                """
+                INSERT INTO estoque (item, descricao, quantidade, imagem)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (item, descricao, quantidade, imagem)
             )
-        )
 
     conexao.commit()
-
     cursor.close()
     conexao.close()
 
@@ -497,6 +510,36 @@ def importar_csv():
     </script>
     """
 
+# =========================================================
+# EXPORTAR CSV
+# =========================================================
+
+
+@app.route('/exportarcsv')
+def exportar_csv():
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    cursor.execute("SELECT id, item, descricao, quantidade FROM estoque")
+    produtos = cursor.fetchall()
+
+    cursor.close()
+    conexao.close()
+
+    # Cabeçalho com UTF-8 BOM (\ufeff) para abrir correto no Excel
+    conteudo_csv = "\ufeffID;Item;Descrição;Quantidade\n"
+    
+    for prod in produtos:
+        # Trata os textos para evitar quebrar o CSV se tiver aspas
+        item = str(prod[1]).replace('"', '""')
+        descricao = str(prod[2]).replace('"', '""')
+        
+        conteudo_csv += f'{prod[0]};"{item}";"{descricao}";{prod[3]}\n'
+
+    resposta = Response(conteudo_csv, mimetype='text/csv')
+    resposta.headers["Content-Disposition"] = "attachment; filename=estoque.csv"
+    
+    return resposta
 
 # =========================================================
 # EXCLUIR ESTOQUE

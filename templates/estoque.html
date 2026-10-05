@@ -41,6 +41,27 @@
 
     <div class="container">
 
+
+        <form action="/excluirtabela" method="POST">
+    <div>
+        <button type="submit" id="botao2" button class="btn btn-outline-primary">Excluir tabela</button>
+    </div>
+    </form>
+
+    <a id="expo" href="/exportarcsv" button class="btn btn-outline-primary">
+    Exportar tabela CSV
+    </a>
+
+    <form id="formImportar" action="/importarcsv" method="POST" enctype="multipart/form-data" style="margin: 0;">
+            <!-- Input de ficheiro totalmente escondido -->
+            <input type="file" id="inputCSV" name="arquivo" accept=".csv" required onchange="this.form.submit()" style="display: none;">
+
+            <button type="button" id="impor" onclick="document.getElementById('inputCSV').click()">
+                Importar CSV
+            </button>
+        </form>
+
+</form>
         <table>
             <tr>
                 <th>ID</th>
@@ -62,29 +83,9 @@
               </tr>
 
                {% endfor %}
-               
         </table>
 
 
     </div>
-
-
-<form style="text-align: center;" action="/importarcsv" method="POST" enctype="multipart/form-data">
-    <input type="file" name="arquivo" accept=".csv" required>
-
-    <div>
-        <button style="text-align: center;" type="submit" id="botao1" class="btn btn-outline-primary">
-            Importar Arquivo CSV
-        </button>
-    </div>
-</form>
-
-<form action="/excluirtabela" method="POST">
-    <div>
-        <button type="submit" id="botao2" button class="btn btn-outline-primary">Excluir tabela</button>
-    </div>
-</form>
-    
-
 </body>
 </html>
