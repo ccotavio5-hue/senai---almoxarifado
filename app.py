@@ -12,21 +12,12 @@ app = Flask(__name__)
 # Chave da sessão
 app.secret_key = os.getenv("SECRET_KEY", "senha_super_secreta")
 
-def conectar_bd():
-    return mysql.connector.connect(
-        host=os.getenv('DB_HOST','localhost'),
-        user='root',
-        password=os.getenv('DB_PASWORD','1234'),
-        database='tcc'
-    )
-
-
 # Configuração do banco de dados
 
 conexao = {
     "host": os.getenv("DB_HOST", "localhost"),
     "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
+    "password": os.getenv("DB_PASSWORD", "1234"),
     "database": os.getenv("DB_NAME", "tcc")
 }
 
