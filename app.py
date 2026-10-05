@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, jsonify, Response
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
 import mysql.connector
 import os
 import bcrypt
@@ -25,7 +26,7 @@ def conectar_bd():
 conexao = {
     "host": os.getenv("DB_HOST", "localhost"),
     "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", "1234"),
+    "password": os.getenv("DB_PASSWORD", ""),
     "database": os.getenv("DB_NAME", "tcc")
 }
 
@@ -800,6 +801,61 @@ def api_login():
         return jsonify({'sucesso': True, 'mensagem': 'Login de Utilizador efetuado!', 'tipo': 'user'}), 200
 
     return jsonify({'sucesso': False, 'mensagem': 'Utilizador ou senha incorretos!'}), 401
+
+
+# =========================================================
+# ROTAS ADICIONAIS DE AUTENTICAÇÃO / SESSÃO PARA O APP
+# =========================================================
+
+# Configuração de CORS atualizada para permitir o envio de sessão/cookies
+CORS(app, supports_credentials=True)
+
+
+@app.route('/api/me', methods=['GET'])
+def api_obter_usuario_logado():
+    """Retorna os dados do usuário atualmente logado na sessão."""
+    usuario = session.get('usuario')
+    tipo = session.get('tipo')
+
+    if usuario:
+        return jsonify({
+            'sucesso': True,
+            'logado': True,
+            'usuario': usuario,
+            'tipo': tipo
+        }), 200
+
+    return jsonify({
+        'sucesso': False,
+        'logado': False,
+        'mensagem': 'Nenhum usuário logado na sessão.'
+    }), 401
+
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    """Encerra a sessão do usuário no aplicativo."""
+    session.clear()
+    return jsonify({
+        'sucesso': True,
+        'mensagem': 'Logout realizado com sucesso!'
+    }), 200
+
+
+@app.route('/api/verificar-sessao-adm', methods=['GET'])
+def api_verificar_sessao_adm():
+    """Verifica se o usuário atual confirmou a credencial de Administrador."""
+    if session.get('adm_verificado'):
+        return jsonify({
+            'sucesso': True,
+            'adm_verificado': True
+        }), 200
+
+    return jsonify({
+        'sucesso': False,
+        'adm_verificado': False,
+        'mensagem': 'Acesso restrito. Requer autenticação de administrador.'
+    }), 403
 
 # =========================================================
 # INICIAR SERVIDOR
