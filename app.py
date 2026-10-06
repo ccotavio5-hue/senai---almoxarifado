@@ -11,13 +11,14 @@ app = Flask(__name__)
 
 # Chave da sessão
 app.secret_key = os.getenv("SECRET_KEY", "senha_super_secreta")
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # Configuração do banco de dados
 
 conexao = {
     "host": os.getenv("DB_HOST", "localhost"),
     "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", "1234"),
+    "password": os.getenv("DB_PASSWORD", ""),
     "database": os.getenv("DB_NAME", "tcc")
 }
 
@@ -561,7 +562,8 @@ def apagar_estoque():
 # ROTA NOVA DO ESTOQUE
 # =========================================================
 
-@app.route('/api/produtos', methods=['GET'])
+
+@app.route('/api/estoque', methods=['GET'])
 def api_listar_produtos():
     try:
         conexao = conectar()
@@ -572,11 +574,12 @@ def api_listar_produtos():
         
         cursor.close()
         conexao.close()
-        
+
+        # Retorna a chave 'estoque' exigida pela Home Screen do App
         return jsonify({
             'sucesso': True,
             'total': len(produtos),
-            'itens': produtos
+            'estoque': produtos
         }), 200
 
     except Exception as e:
@@ -589,38 +592,47 @@ def api_listar_produtos():
 @app.route('/api/adicionar', methods=['POST'])
 def api_adicionar_item():
     try:
-        dados = request.get_json() or {}
-        
-        item = dados.get('item')
-        quantidade = dados.get('quantidade')
-        descricao = dados.get('descricao', '')
-        imagem = dados.get('imagem', 'padrao.png')
+        item = request.form.get('item')
+        quantidade = request.form.get('quantidade')
+        descricao = request.form.get('descricao', '')
 
-        # Validação dos campos obrigatórios
         if not item or quantidade is None:
             return jsonify({
                 'sucesso': False, 
                 'mensagem': 'Os campos "item" e "quantidade" são obrigatórios!'
             }), 400
 
+        quantidade = int(quantidade)
+        nome_arquivo = 'padrao.png'
+
+        # Salva o arquivo de foto se ele foi selecionado
+        if 'imagem' in request.files:
+            arquivo = request.files['imagem']
+            if arquivo and arquivo.filename != '':
+                nome_arquivo = secure_filename(arquivo.filename)
+                
+                # Garante que a pasta static/uploads existe
+                pasta = os.path.join('static', 'uploads')
+                if not os.path.exists(pasta):
+                    os.makedirs(pasta)
+                    
+                arquivo.save(os.path.join(pasta, nome_arquivo))
+
         conexao = conectar()
         cursor = conexao.cursor()
 
-        # Verifica se o item já existe no banco
         cursor.execute("SELECT id FROM estoque WHERE item = %s", (item,))
         existe = cursor.fetchone()
 
         if existe:
-            # Se existe, apenas soma a quantidade enviada
             cursor.execute(
                 "UPDATE estoque SET quantidade = quantidade + %s WHERE item = %s", 
                 (quantidade, item)
             )
         else:
-            # Se não existe, insere o novo produto
             cursor.execute(
                 "INSERT INTO estoque (item, descricao, quantidade, imagem) VALUES (%s, %s, %s, %s)",
-                (item, descricao, quantidade, imagem)
+                (item, descricao, quantidade, nome_arquivo)
             )
 
         conexao.commit()
@@ -629,7 +641,7 @@ def api_adicionar_item():
 
         return jsonify({
             'sucesso': True, 
-            'mensagem': 'Item cadastrado/atualizado com sucesso!'
+            'mensagem': 'Item cadastrado com sucesso!'
         }), 201
 
     except Exception as e:
@@ -847,6 +859,9 @@ def api_verificar_sessao_adm():
         'adm_verificado': False,
         'mensagem': 'Acesso restrito. Requer autenticação de administrador.'
     }), 403
+
+
+
 
 # =========================================================
 # INICIAR SERVIDOR

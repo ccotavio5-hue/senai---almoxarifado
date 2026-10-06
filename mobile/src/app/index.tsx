@@ -12,8 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-// IP da sua máquina confirmado no Postman
-const IP_COMPUTADOR = '192.168.4.2'; 
+// IP da sua máquina
+const IP_COMPUTADOR = '10.154.20.107'; 
 const API_URL = `http://${IP_COMPUTADOR}:5000/api/login`;
 
 export default function LoginScreen() {
@@ -22,6 +22,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // 1. Botão ENTRAR (Acessa o sistema / estoque)
   const handleLogin = async () => {
     if (!usuario.trim() || !senha.trim()) {
       Alert.alert('Atenção', 'Por favor, preencha o usuário e a senha.');
@@ -33,13 +34,8 @@ export default function LoginScreen() {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          usuario: usuario,
-          senha: senha,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, senha }),
       });
 
       const data = await response.json();
@@ -48,12 +44,7 @@ export default function LoginScreen() {
         Alert.alert(
           'Sucesso!', 
           `Bem-vindo, ${usuario}! (${data.tipo === 'adm' ? 'Administrador' : 'Usuário'})`,
-          [
-            {
-              text: 'Continuar',
-              onPress: () => router.replace('/home')
-            }
-          ]
+          [{ text: 'Continuar', onPress: () => router.replace('/home') }]
         );
       } else {
         Alert.alert('Erro no Login', data.mensagem || 'Usuário ou senha incorretos.');
@@ -62,8 +53,44 @@ export default function LoginScreen() {
       console.error('Erro ao conectar na API:', error);
       Alert.alert(
         'Erro de Conexão', 
-        'Não foi possível conectar ao servidor Flask. Verifique se o Firewall liberou a porta 5000.'
+        'Não foi possível conectar ao servidor Flask. Verifique o Firewall.'
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2. Botão CADASTRE-SE ADM (Valida se o usuário digitado é ADM e vai para a tela de cadastro)
+  const handleIrParaCadastro = async () => {
+    if (!usuario.trim() || !senha.trim()) {
+      Alert.alert('Atenção', 'Preencha o Usuário e a Senha de Administrador nos campos acima para prosseguir.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, senha }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.sucesso) {
+        // Verifica se o usuário autenticado tem perfil de Administrador
+        if (data.tipo === 'adm' || data.e_adm === true) {
+          router.push('/cadastro'); // Redireciona para o cadastro
+        } else {
+          Alert.alert('Acesso Negado', 'Apenas usuários Administradores podem acessar a página de cadastro.');
+        }
+      } else {
+        Alert.alert('Erro de Autenticação', data.mensagem || 'Usuário ou senha incorretos.');
+      }
+    } catch (error) {
+      console.error('Erro ao conectar na API:', error);
+      Alert.alert('Erro de Conexão', 'Não foi possível conectar ao servidor Flask.');
     } finally {
       setLoading(false);
     }
@@ -99,6 +126,7 @@ export default function LoginScreen() {
           secureTextEntry
         />
 
+        {/* Botão de ENTRAR (Acessa o sistema) */}
         <TouchableOpacity 
           style={styles.botao} 
           onPress={handleLogin}
@@ -109,6 +137,15 @@ export default function LoginScreen() {
           ) : (
             <Text style={styles.textoBotao}>ENTRAR</Text>
           )}
+        </TouchableOpacity>
+
+        {/* Botão Cadastre-se ADM (Usa as mesmas caixas de texto) */}
+        <TouchableOpacity 
+          style={styles.btnCadastro} 
+          onPress={handleIrParaCadastro}
+          disabled={loading}
+        >
+          <Text style={styles.btnCadastroText}>Cadastre-se (ADM)</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -170,5 +207,16 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  btnCadastro: {
+    marginTop: 15,
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  btnCadastroText: {
+    color: '#005CA9',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });
