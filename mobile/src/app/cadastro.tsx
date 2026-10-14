@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-const IP_COMPUTADOR = '10.154.20.107';
+const IP_COMPUTADOR = '10.154.20.152';
 const API_URL = `http://${IP_COMPUTADOR}:5000/api/cadastro`;
 
 export default function CadastroScreen() {

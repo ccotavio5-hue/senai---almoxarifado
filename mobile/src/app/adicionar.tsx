@@ -1,221 +1,174 @@
+
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Alert,
-  ScrollView,
-  ActivityIndicator
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  Image, Alert, ScrollView, ActivityIndicator, StatusBar
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { File } from 'expo-file-system';
+import { fetch } from 'expo/fetch';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
-// Endereço IP do seu servidor Flask
-const API_URL = 'http://10.154.20.107:5000';
+const API_URL = 'http://10.154.20.152:5000';
 
-export default function AdicionarItemScreen({ navigation }: any) {
+const abas = [
+  { nome: 'Estoque', rota: '/home' },
+  { nome: 'Adicionar', rota: '/adicionar' },
+  { nome: 'Retirar', rota: '/retirar' },
+  { nome: 'Histórico', rota: '/historico' }
+] as const;
+
+export default function AdicionarItemScreen() {
+  const router = useRouter();
   const [item, setItem] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [descricao, setDescricao] = useState('');
   const [imagemUri, setImagemUri] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
 
-  // Função para selecionar imagem da galeria
   const selecionarImagem = async () => {
-    const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    try {
+      const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissao.granted) {
+        Alert.alert('Atenção', 'Permita o acesso às fotos.');
+        return;
+      }
 
-    if (!permissao.granted) {
-      Alert.alert('Permissão necessária', 'É preciso permitir o acesso às fotos.');
-      return;
-    }
+      const resultado = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'], allowsEditing: true,
+        aspect: [4, 3], quality: 0.8
+      });
 
-    const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!resultado.canceled && resultado.assets.length > 0) {
-      setImagemUri(resultado.assets[0].uri);
+      if (!resultado.canceled && resultado.assets.length)
+        setImagemUri(resultado.assets[0].uri);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
     }
   };
 
-  // Função para salvar o item na API
   const salvarItem = async () => {
-    if (!item.trim() || !quantidade.trim()) {
-      Alert.alert('Erro', 'Preencha o nome do item e a quantidade.');
+    const numero = Number(quantidade.trim());
+    if (!item.trim() || !Number.isInteger(numero) || numero <= 0) {
+      Alert.alert('Atenção', 'Informe o nome e uma quantidade válida.');
       return;
     }
 
     setCarregando(true);
-
     try {
-      const formData = new FormData();
-      formData.append('item', item);
-      formData.append('quantidade', quantidade);
-      formData.append('descricao', descricao);
+      const dados = new FormData();
+      dados.append('item', item.trim());
+      dados.append('quantidade', String(numero));
+      dados.append('descricao', descricao.trim());
 
-      // Se houver uma imagem selecionada, adiciona ao FormData
       if (imagemUri) {
-        const nomeArquivo = imagemUri.split('/').pop() || 'foto.jpg';
-        const extensao = nomeArquivo.split('.').pop();
-        const tipo = extensao ? `image/${extensao}` : 'image/jpeg';
-
-        formData.append('imagem', {
-          uri: imagemUri,
-          name: nomeArquivo,
-          type: tipo,
-        } as any);
+        const foto = new File(imagemUri);
+        if (!foto.exists) throw new Error('Imagem não encontrada.');
+        if (foto.size > 16 * 1024 * 1024)
+          throw new Error('A imagem deve ter menos de 16 MB.');
+        dados.append('imagem', foto, foto.name);
       }
 
-      // Envia a requisição POST (Sem definir Content-Type manual)
-      const response = await fetch(`${API_URL}/api/adicionar`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json',
-        },
+      const resposta = await fetch(`${API_URL}/api/adicionar`, {
+        method: 'POST', body: dados
       });
 
-      const data = await response.json();
+      const resultado = await resposta.json().catch(() => {
+        throw new Error(`Erro do servidor: HTTP ${resposta.status}`);
+      });
 
-      if (response.ok && data.sucesso) {
-        Alert.alert('Sucesso', 'Item adicionado/atualizado com sucesso!');
-        setItem('');
-        setQuantidade('');
-        setDescricao('');
-        setImagemUri(null);
-      } else {
-        Alert.alert('Erro', data.mensagem || data.erro || 'Erro ao adicionar item.');
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Erro', 'Não foi possível conectar ao servidor. Verifique o IP e a conexão Wi-Fi');
+      if (!resposta.ok || !resultado.sucesso)
+        throw new Error(resultado.mensagem || resultado.erro || 'Erro ao cadastrar.');
+
+      setItem('');
+      setQuantidade('');
+      setDescricao('');
+      setImagemUri(null);
+      Alert.alert('Sucesso', resultado.mensagem || 'Produto cadastrado!', [
+        { text: 'OK', onPress: () => router.push('/home') }
+      ]);
+    } catch (erro) {
+      Alert.alert('Erro ao salvar',
+        erro instanceof Error ? erro.message : 'Falha no cadastro.');
     } finally {
       setCarregando(false);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.titulo}>Adicionar Item</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#005CA9" />
 
-      <Text style={styles.label}>Nome do Item *</Text>
-      <TextInput
-        style={styles.input}
-        value={item}
-        onChangeText={setItem}
-        placeholder="Ex: Chave de Fenda"
-      />
+      <View style={styles.header}>
+        <Text style={styles.titulo}>Almoxarifado SENAI</Text>
+        <Text style={styles.subtitulo}>Adicionar Produto</Text>
+      </View>
 
-      <Text style={styles.label}>Quantidade *</Text>
-      <TextInput
-        style={styles.input}
-        value={quantidade}
-        onChangeText={setQuantidade}
-        keyboardType="numeric"
-        placeholder="Ex: 10"
-      />
+      <View style={styles.navBar}>
+        {abas.map(aba => (
+          <TouchableOpacity
+            key={aba.rota}
+            style={[styles.navItem, aba.rota === '/adicionar' && styles.ativo]}
+            onPress={() => aba.rota !== '/adicionar' && router.push(aba.rota)}
+          >
+            <Text style={aba.rota === '/adicionar' ? styles.textoAtivo : styles.navText}>
+              {aba.nome}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      <Text style={styles.label}>Descrição</Text>
-      <TextInput
-        style={[styles.input, styles.inputMultiline]}
-        value={descricao}
-        onChangeText={setDescricao}
-        placeholder="Descrição do item..."
-        multiline
-      />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <Text style={styles.label}>Nome do Item *</Text>
+          <TextInput style={styles.input} value={item} onChangeText={setItem}
+            placeholder="Ex: Chave de Fenda" />
 
-      <Text style={styles.label}>Foto do Produto</Text>
-      <TouchableOpacity style={styles.btnFoto} onPress={selecionarImagem}>
-        <Text style={styles.btnFotoTexto}>
-          {imagemUri ? 'Trocar Imagem' : 'Selecionar Foto'}
-        </Text>
-      </TouchableOpacity>
+          <Text style={styles.label}>Quantidade *</Text>
+          <TextInput style={styles.input} value={quantidade}
+            onChangeText={setQuantidade} keyboardType="numeric" placeholder="Ex: 10" />
 
-      {imagemUri && (
-        <Image source={{ uri: imagemUri }} style={styles.previewImagem} />
-      )}
+          <Text style={styles.label}>Descrição</Text>
+          <TextInput style={[styles.input, styles.multiline]} value={descricao}
+            onChangeText={setDescricao} placeholder="Descrição do item..." multiline />
 
-      <TouchableOpacity
-        style={[styles.btnSalvar, carregando && styles.btnDesabilitado]}
-        onPress={salvarItem}
-        disabled={carregando}
-      >
-        {carregando ? (
-          <ActivityIndicator color="#FFF" />
-        ) : (
-          <Text style={styles.btnSalvarTexto}>Salvar Item</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+          <Text style={styles.label}>Foto do Produto</Text>
+          <TouchableOpacity style={styles.btnFoto} onPress={selecionarImagem}>
+            <Text style={styles.btnText}>
+              {imagemUri ? 'Trocar Imagem' : 'Selecionar Foto'}
+            </Text>
+          </TouchableOpacity>
+
+          {imagemUri && <Image source={{ uri: imagemUri }} style={styles.preview} />}
+
+          <TouchableOpacity style={[styles.btnSalvar, carregando && { opacity: 0.6 }]}
+            onPress={salvarItem} disabled={carregando}>
+            {carregando ? <ActivityIndicator color="#FFF" /> :
+              <Text style={styles.btnText}>Salvar Item</Text>}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: '#fff',
-    flexGrow: 1,
-  },
-  titulo: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 5,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 15,
-    fontSize: 16,
-  },
-  inputMultiline: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  btnFoto: {
-    backgroundColor: '#6c757d',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  btnFotoTexto: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  previewImagem: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 15,
-    resizeMode: 'cover',
-  },
-  btnSalvar: {
-    backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  btnDesabilitado: {
-    backgroundColor: '#a0c4ff',
-  },
-  btnSalvarTexto: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  container: { flex: 1, backgroundColor: '#F4F6F8' },
+  header: { backgroundColor: '#005CA9', paddingVertical: 18, alignItems: 'center' },
+  titulo: { fontSize: 20, fontWeight: 'bold', color: '#FFF' },
+  subtitulo: { fontSize: 12, color: '#E0E0E0', marginTop: 2 },
+  navBar: { flexDirection: 'row', backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  navItem: { flex: 1, paddingVertical: 12, alignItems: 'center' },
+  ativo: { borderBottomWidth: 3, borderBottomColor: '#005CA9' },
+  navText: { fontSize: 13, fontWeight: '600', color: '#666' },
+  textoAtivo: { fontSize: 13, fontWeight: 'bold', color: '#005CA9' },
+  content: { padding: 16 },
+  card: { backgroundColor: '#FFF', borderRadius: 10, padding: 16, elevation: 2 },
+  label: { fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 6 },
+  input: { backgroundColor: '#F8F9FA', borderWidth: 1, borderColor: '#DDD', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, marginBottom: 16 },
+  multiline: { height: 80, textAlignVertical: 'top' },
+  btnFoto: { backgroundColor: '#6C757D', paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginBottom: 16 },
+  preview: { width: '100%', height: 200, borderRadius: 8, marginBottom: 16, resizeMode: 'cover' },
+  btnSalvar: { backgroundColor: '#005CA9', paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginTop: 8 },
+  btnText: { color: '#FFF', fontSize: 15, fontWeight: 'bold' }
 });

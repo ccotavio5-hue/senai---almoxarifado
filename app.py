@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, jsonify, Response
 from werkzeug.utils import secure_filename
+from uuid import uuid4
 from flask_cors import CORS
 import mysql.connector
 import os
@@ -591,65 +592,93 @@ def api_listar_produtos():
 
 @app.route('/api/adicionar', methods=['POST'])
 def api_adicionar_item():
+    # Recebe texto e uma foto opcional por multipart/form-data.
     try:
-        item = request.form.get('item')
-        quantidade = request.form.get('quantidade')
-        descricao = request.form.get('descricao', '')
+        item = (request.form.get('item') or '').strip()
+        descricao = (request.form.get('descricao') or '').strip()
+        quantidade_texto = (request.form.get('quantidade') or '').strip()
 
-        if not item or quantidade is None:
+        if not item or not quantidade_texto:
             return jsonify({
-                'sucesso': False, 
-                'mensagem': 'Os campos "item" e "quantidade" são obrigatórios!'
+                'sucesso': False,
+                'mensagem': 'Nome do item e quantidade são obrigatórios.'
             }), 400
 
-        quantidade = int(quantidade)
-        nome_arquivo = 'padrao.png'
+        try:
+            quantidade = int(quantidade_texto)
+        except ValueError:
+            return jsonify({
+                'sucesso': False,
+                'mensagem': 'A quantidade deve ser um número inteiro.'
+            }), 400
 
-        # Salva o arquivo de foto se ele foi selecionado
-        if 'imagem' in request.files:
-            arquivo = request.files['imagem']
-            if arquivo and arquivo.filename != '':
-                nome_arquivo = secure_filename(arquivo.filename)
-                
-                # Garante que a pasta static/uploads existe
-                pasta = os.path.join('static', 'uploads')
-                if not os.path.exists(pasta):
-                    os.makedirs(pasta)
-                    
-                arquivo.save(os.path.join(pasta, nome_arquivo))
+        if quantidade <= 0:
+            return jsonify({
+                'sucesso': False,
+                'mensagem': 'A quantidade deve ser maior que zero.'
+            }), 400
 
-        conexao = conectar()
-        cursor = conexao.cursor()
+        nome_arquivo = None
+        arquivo = request.files.get('imagem')
 
-        cursor.execute("SELECT id FROM estoque WHERE item = %s", (item,))
-        existe = cursor.fetchone()
+        if arquivo and arquivo.filename:
+            nome_original = secure_filename(arquivo.filename)
+            extensao = os.path.splitext(nome_original)[1].lower()
 
-        if existe:
-            cursor.execute(
-                "UPDATE estoque SET quantidade = quantidade + %s WHERE item = %s", 
-                (quantidade, item)
-            )
-        else:
-            cursor.execute(
-                "INSERT INTO estoque (item, descricao, quantidade, imagem) VALUES (%s, %s, %s, %s)",
-                (item, descricao, quantidade, nome_arquivo)
-            )
+            if extensao not in {'.jpg', '.jpeg', '.png', '.webp'}:
+                return jsonify({
+                    'sucesso': False,
+                    'mensagem': 'Formato de foto não permitido. Use JPG, PNG ou WEBP.'
+                }), 400
 
-        conexao.commit()
-        cursor.close()
-        conexao.close()
+            # Evita sobrescrever imagens de outros produtos.
+            nome_arquivo = f'{uuid4().hex}{extensao}'
+            pasta = os.path.join(app.static_folder, 'uploads')
+            os.makedirs(pasta, exist_ok=True)
+            arquivo.save(os.path.join(pasta, nome_arquivo))
+
+        banco = conectar()
+        cursor = banco.cursor()
+        try:
+            cursor.execute('SELECT id FROM estoque WHERE item = %s', (item,))
+            existente = cursor.fetchone()
+
+            if existente:
+                if nome_arquivo:
+                    cursor.execute(
+                        'UPDATE estoque SET quantidade = quantidade + %s, imagem = %s WHERE id = %s',
+                        (quantidade, nome_arquivo, existente[0])
+                    )
+                else:
+                    cursor.execute(
+                        'UPDATE estoque SET quantidade = quantidade + %s WHERE id = %s',
+                        (quantidade, existente[0])
+                    )
+            else:
+                cursor.execute(
+                    'INSERT INTO estoque (item, descricao, quantidade, imagem) VALUES (%s, %s, %s, %s)',
+                    (item, descricao, quantidade, nome_arquivo or 'padrao.png')
+                )
+
+            banco.commit()
+        except Exception:
+            banco.rollback()
+            raise
+        finally:
+            cursor.close()
+            banco.close()
 
         return jsonify({
-            'sucesso': True, 
+            'sucesso': True,
             'mensagem': 'Item cadastrado com sucesso!'
         }), 201
 
-    except Exception as e:
+    except Exception:
+        app.logger.exception('Erro ao adicionar produto')
         return jsonify({
-            'sucesso': False, 
-            'erro': str(e)
+            'sucesso': False,
+            'mensagem': 'Erro interno ao cadastrar o produto.'
         }), 500
-
 
 
 @app.route('/api/retirar', methods=['DELETE'])
