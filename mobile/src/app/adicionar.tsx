@@ -10,7 +10,7 @@ import { fetch } from 'expo/fetch';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-const API_URL = 'http://10.154.20.152:5000';
+const API_URL = 'http://10.154.20.107:5000';
 
 const abas = [
   { nome: 'Estoque', rota: '/home' },

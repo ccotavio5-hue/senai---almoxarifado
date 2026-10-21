@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 // IP do seu servidor Flask
-const IP_COMPUTADOR = '10.154.20.152';
+const IP_COMPUTADOR = '10.154.20.107';
 const API_URL = `http://${IP_COMPUTADOR}:5000`;
 
 interface ItemEstoque {

@@ -1,0 +1,21 @@
+python -m pip install -r requirements.txt
+
+python -m pip install flask-cors
+
+python app.py
+
+=====mobile======
+
+cd mobile
+
+npm install
+
+npm ls expo
+
+npx expo start --clear
+
+=====docker======
+
+docker compose up -d --build
+
+docker ps

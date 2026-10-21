@@ -27,6 +27,9 @@ def conectar():
     return mysql.connector.connect(**conexao)
 
 
+@app.route('/ia.html')
+def pagina_ia():
+    return render_template('ia.html')
 # =========================================================
 # PÁGINA DE LOGIN
 # =========================================================
