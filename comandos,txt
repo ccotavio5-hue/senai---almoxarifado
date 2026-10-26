@@ -14,6 +14,8 @@ npm ls expo
 
 npx expo start --clear
 
+npx expo install expo-document-picker expo-file-system expo-sharing
+
 =====docker======
 
 docker compose up -d --build

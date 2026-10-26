@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 const IP_COMPUTADOR = '10.154.20.107';
-const API_URL = `http://${IP_COMPUTADOR}:5000/api/cadastro`;
+const API_URL = `http://${IP_COMPUTADOR}:5000/api/criarconta`;
 
 export default function CadastroScreen() {
   const [usuario, setUsuario] = useState('');
@@ -39,7 +39,7 @@ export default function CadastroScreen() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.sucesso) {
         Alert.alert('Sucesso', 'Usuário cadastrado com sucesso!', [
           { text: 'OK', onPress: () => router.back() }
         ]);
