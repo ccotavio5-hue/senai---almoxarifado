@@ -16,6 +16,7 @@ body {
     margin: 40px auto;
     background-color: #e6e6e6;
     padding: 15px;
+    border-radius: 10px;
 }
 
 table {

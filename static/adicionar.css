@@ -1,3 +1,4 @@
+
 body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
@@ -7,64 +8,93 @@ body {
     background-repeat: no-repeat;
 }
 
-.logo {
-    width: 170px;
-    height: 90px;
+
+.navbar-senai {
+    background: #fb9203;
+    padding: 5px 20px;
+    min-height: 70px;
 }
- 
-#item, #quantidade, #descricao, #foto {
-    width: 300px ;
-    height: 40px ;
-    padding: 10px ;
-    font-size: 16px;
-    border-radius: 8px ;
-    border: none ;
-    background-color: rgb(224, 233, 230);
-    color: #333 ;
+
+.navbar-senai .navbar-brand {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 25px;
 }
- 
-.texto{
+
+.navbar-senai .nav-link {
+    color: white !important;
+    font-size: 20px;
+    padding: 8px 10px !important;
+    margin: 0 5px;
+    border-bottom: 2px solid transparent;
+}
+
+.navbar-senai .nav-link:hover,
+.navbar-senai .selecionado {
+    border-bottom-color: white;
+}
+
+.logo-senai {
+    width: 210px;
+    height: 55px;
+    object-fit: cover;
+    object-position: center;
+    margin-left: auto;
+}
+
+.navbar-senai .navbar-toggler {
+    background: white;
+}
+
+
+/* FORMULÁRIO */
+.texto {
     text-align: center;
     font-size: large;
-    font-family: Arial, Helvetica, sans-serif;
 }
- 
-#botao{
-    background-color: rgb(212, 205, 205);
-    padding: 15px 40px ;
-    font-size: 20px ;
+
+form[action="/retirar"] {
+    margin-top: 60px;
+}
+
+#item, #pessoa, #quantidade,#descricao,#imagem {
+    width: 300px;
+    height: 40px;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    background: rgb(224, 233, 230);
+    color: #333;
+    box-sizing: content-box;
+}
+
+/* BOTÃO RETIRAR */
+#botao {
+    background: rgb(235, 136, 6);
+    padding: 15px 40px;
+    font-size: 20px;
     border-radius: 10px;
-    border: none ;
-    color: black;
+    border: none;
+    color: rgb(8, 8, 7);
+    cursor: pointer;
 }
 
-.topo {
-    background-color: #FB9203;
-    padding: 1px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
- 
-#botao:hover{
-    background-color: rgb(196, 194, 194);
+#botao:hover {
+    background: rgb(255, 159, 68);
     transform: scale(1.05);
 }
- 
-#button{
-    background-color: rgb(212, 205, 205) ;
-    padding: 10px 20px ;
-    font-size: 20px ;
-    border-radius: 10px ;
-    border: none ;
-    color: black;
+
+
+#quadrado {
+    z-index: -1;
     position: absolute;
-    left: 3%; 
-    top: 90%;
-}
- 
-#button:hover{
-    background-color: #6888b3;
-    transform: scale(1.05);
+    top: 125px;
+    left: 730px;
+    width: 24%;
+    height: 80%;
+    background-color:#dbdbdb;
+    border-radius: 50px;
+    border: 5px solid #FB9203;
 }

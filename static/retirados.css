@@ -6,16 +6,12 @@ body {
     background-image: url('./ft/novof1.png');
 }
 
-.logo {
-    width: 200px;
-    height: 80px;
-}
-
 .container {
     width: 80%;
     margin: 40px auto;
     background-color: #e6e6e6;
     padding: 30px;
+    border-radius: 10px;
 }
 
 table {
@@ -66,4 +62,42 @@ th {
     border: none;
     font-size: 20px;
     cursor: pointer;
+}
+
+.navbar-senai {
+    background: #fb9203;
+    padding: 5px 20px;
+    min-height: 70px;
+}
+
+.navbar-senai .navbar-brand {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 25px;
+}
+
+.navbar-senai .nav-link {
+    color: white !important;
+    font-size: 20px;
+    padding: 8px 10px !important;
+    margin: 0 5px;
+    border-bottom: 2px solid transparent;
+}
+
+.navbar-senai .nav-link:hover,
+.navbar-senai .selecionado {
+    border-bottom-color: white;
+}
+
+.logo-senai {
+    width: 210px;
+    height: 55px;
+    object-fit: cover;
+    object-position: center;
+    margin-left: auto;
+}
+
+.navbar-senai .navbar-toggler {
+    background: white;
 }

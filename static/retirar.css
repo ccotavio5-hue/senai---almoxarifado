@@ -9,56 +9,42 @@ body {
 }
 
 
-/* NAVBAR */
 .navbar-senai {
     background: #fb9203;
-    padding: 22px 35px;
-    border-bottom: 3px solid #e58400;
-}
-
-.navbar-senai .container-fluid,
-.navbar-senai .navbar-collapse,
-.navbar-senai .navbar-nav {
-    display: flex;
-    align-items: center;
+    padding: 5px 20px;
+    min-height: 70px;
 }
 
 .navbar-senai .navbar-brand {
     color: white;
     font-size: 24px;
     font-weight: bold;
-    text-decoration: none;
-    margin-right: 45px;
-}
-
-.navbar-senai .navbar-nav {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    gap: 12px;
+    margin-right: 25px;
 }
 
 .navbar-senai .nav-link {
-    color: white;
-    font-size: 18px;
-    text-decoration: none;
-    padding: 10px 12px;
-    border-bottom: 3px solid transparent;
-    transition: 0.2s;
+    color: white !important;
+    font-size: 20px;
+    padding: 8px 10px !important;
+    margin: 0 5px;
+    border-bottom: 2px solid transparent;
 }
 
-.navbar-senai .nav-link:hover {
-    color: #fff;
-    border-bottom-color: #ffffff80;
-}
-
+.navbar-senai .nav-link:hover,
 .navbar-senai .selecionado {
-    font-weight: bold;
     border-bottom-color: white;
 }
 
+.logo-senai {
+    width: 210px;
+    height: 55px;
+    object-fit: cover;
+    object-position: center;
+    margin-left: auto;
+}
+
 .navbar-senai .navbar-toggler {
-    display: none;
+    background: white;
 }
 
 
@@ -86,16 +72,29 @@ form[action="/retirar"] {
 
 /* BOTÃO RETIRAR */
 #botao {
-    background: rgb(212, 205, 205);
+    background: rgb(235, 136, 6);
     padding: 15px 40px;
     font-size: 20px;
     border-radius: 10px;
     border: none;
-    color: black;
+    color: rgb(8, 8, 7);
     cursor: pointer;
 }
 
 #botao:hover {
-    background: rgb(196, 194, 194);
+    background: rgb(255, 159, 68);
     transform: scale(1.05);
+}
+
+
+#quadrado {
+    z-index: -1;
+    position: absolute;
+    top: 125px;
+    left: 730px;
+    width: 24%;
+    height: 80%;
+    background-color:#dbdbdb;
+    border-radius: 50px;
+    border: 5px solid #FB9203;
 }

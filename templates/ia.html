@@ -1,455 +1,66 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Assistente IA | Almoxarifado SENAI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>adicionar</title>
+    <link rel="stylesheet" href="static/ia.css">
+    <script src="static/ia.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 
-  <script src="{{ url_for('static', filename='ia.js') }}" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f1f5fa;
-      color: #18324d;
-      min-height: 100vh;
-    }
-
-    /* MENU */
-    .navbar {
-      background: #005ca9;
-      padding: 0 7%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 72px;
-      gap: 20px;
-    }
-
-    .logo {
-      color: white;
-      font-weight: 800;
-      font-size: 21px;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-
-    .logo span {
-      color: #ffae28;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-links a {
-      color: #e4efff;
-      text-decoration: none;
-      padding: 11px 14px;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: 0.2s;
-    }
-
-    .nav-links a:hover,
-    .nav-links .ativo {
-      background: rgba(255,255,255,0.16);
-      color: white;
-    }
-
-    /* FUNDO PRINCIPAL */
-    .principal {
-      background:
-        radial-gradient(circle at 85% 15%, #176fbd 0%, transparent 40%),
-        linear-gradient(130deg, #062a53, #005ca9);
-      min-height: 290px;
-      padding: 65px 20px 120px;
-      text-align: center;
-      color: white;
-    }
-
-    .etiqueta {
-      display: inline-block;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.25);
-      padding: 8px 18px;
-      border-radius: 30px;
-      font-size: 13px;
-      margin-bottom: 20px;
-    }
-
-    .principal h1 {
-      font-size: clamp(27px, 4vw, 42px);
-      font-weight: 800;
-      margin-bottom: 15px;
-    }
-
-    .principal h1 span {
-      color: #ffae28;
-    }
-
-    .principal p {
-      color: #d7e9fa;
-      max-width: 570px;
-      margin: auto;
-      font-size: 16px;
-      line-height: 1.7;
-    }
-
-    /* PAINEL */
-    .conteudo {
-      width: 90%;
-      max-width: 850px;
-      margin: -75px auto 45px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .painel {
-      background: white;
-      border-radius: 18px;
-      box-shadow: 0 15px 45px rgba(0,30,70,0.13);
-      padding: 34px;
-    }
-
-    .painel-titulo {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 25px;
-    }
-
-    .icone-ia {
-      width: 52px;
-      height: 52px;
-      background: #e6f1ff;
-      color: #005ca9;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-    }
-
-    .painel-titulo h2 {
-      font-size: 21px;
-      margin-bottom: 5px;
-      color: #173756;
-    }
-
-    .painel-titulo p {
-      color: #778899;
-      font-size: 13px;
-    }
-
-    /* PERGUNTA */
-    .campo-pergunta {
-      display: flex;
-      gap: 10px;
-      background: #f7f9fc;
-      border: 1px solid #d7e2ed;
-      padding: 8px;
-      border-radius: 12px;
-      transition: 0.2s;
-    }
-
-    .campo-pergunta:focus-within {
-      border-color: #005ca9;
-      box-shadow: 0 0 0 3px rgba(0,92,169,0.08);
-    }
-
-    #perguntaInput {
-      flex: 1;
-      width: 100%;
-      min-width: 0;
-      padding: 12px;
-      border: none;
-      outline: none;
-      background: transparent;
-      font-size: 15px;
-      color: #173756;
-    }
-
-    #but {
-      background: #005ca9;
-      border: none;
-      color: white;
-      font-size: 20px;
-      border-radius: 9px;
-      padding: 0 22px;
-      min-height: 48px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    #but:hover {
-      background: #004681;
-      transform: translateY(-1px);
-    }
-
-    #but:disabled {
-      opacity: 0.6;
-      cursor: wait;
-    }
-
-    /* SUGESTÕES */
-    .sugestoes {
-      margin-top: 26px;
-    }
-
-    .sugestoes h3 {
-      font-size: 14px;
-      color: #66798b;
-      margin-bottom: 13px;
-    }
-
-    .botoes-sugestoes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 9px;
-    }
-
-    .sugestao {
-      background: #eef5fc;
-      border: 1px solid #dceaf8;
-      color: #005ca9;
-      padding: 11px 15px;
-      border-radius: 9px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: 0.2s;
-    }
-
-    .sugestao:hover {
-      background: #005ca9;
-      color: white;
-    }
-
-    /* RESPOSTA DA IA */
-    .area-resposta {
-      margin-top: 28px;
-      border-top: 1px solid #e6ecf2;
-      padding-top: 24px;
-    }
-
-    .resposta-titulo {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      font-size: 15px;
-      font-weight: bold;
-      color: #005ca9;
-      margin-bottom: 15px;
-    }
-
-    #resultado {
-      background: #f4f8fc;
-      border-left: 4px solid #ff9900;
-      padding: 22px;
-      border-radius: 0 12px 12px 0;
-      color: #34495e;
-      line-height: 1.8;
-      font-size: 15px;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      min-height: 85px;
-    }
-
-    .aviso {
-      margin-top: 14px;
-      color: #8493a2;
-      font-size: 12px;
-      line-height: 1.5;
-    }
-
-    /* RODAPÉ */
-    footer {
-      text-align: center;
-      padding: 25px 15px;
-      color: #71869b;
-      font-size: 13px;
-    }
-
-    /* RESPONSIVIDADE */
-    @media (max-width: 650px) {
-      .navbar {
-        flex-direction: column;
-        padding: 18px 12px;
-      }
-
-      .nav-links {
-        width: 100%;
-        overflow-x: auto;
-        justify-content: flex-start;
-      }
-
-      .nav-links a {
-        white-space: nowrap;
-        padding: 9px 10px;
-        font-size: 13px;
-      }
-
-      .principal {
-        padding: 45px 15px 110px;
-      }
-
-      .conteudo {
-        width: 94%;
-        margin-top: -75px;
-      }
-
-      .painel {
-        padding: 22px 18px;
-      }
-
-      .painel-titulo h2 {
-        font-size: 18px;
-      }
-
-      #but {
-        padding: 0 15px;
-      }
-
-      #resultado {
-        padding: 15px;
-        font-size: 14px;
-      }
-    }
-  </style>
 </head>
 
 <body>
 
-  <!-- MENU -->
-  <nav class="navbar">
-    <a class="logo" href="/estoque.html">
-      SENAI <span>Almoxarifado</span>
-    </a>
+     <nav class="navbar-senai">
+        <a class="titulo" href="/estoque.html">Almoxarifado</a>
 
-    <div class="nav-links">
-      <a href="/estoque.html">Estoque</a>
-      <a href="/adicionar.html">Adicionar</a>
-      <a href="/retirar.html">Retirar</a>
-      <a href="/retirados.html">Histórico</a>
-      <a href="/ia.html" class="ativo">Assistente IA</a>
-    </div>
-  </nav>
-
-  <!-- APRESENTAÇÃO -->
-  <section class="principal">
-    <div class="etiqueta">✦ Tecnologia e conhecimento</div>
-
-    <h1>Seu Assistente <span>Inteligente</span></h1>
-
-    <p>
-      Tire suas dúvidas sobre ferramentas, equipamentos,
-      materiais e procedimentos de almoxarifado.
-      Aprenda de maneira simples e rápida!
-    </p>
-  </section>
-
-  <!-- CONTEÚDO -->
-  <main class="conteudo">
-    <div class="painel">
-
-      <div class="painel-titulo">
-        <div class="icone-ia">✦</div>
-
-        <div>
-          <h2>Como posso ajudar?</h2>
-          <p>Faça uma pergunta ao assistente virtual.</p>
+        <div class="menu">
+            <a href="/estoque.html">Estoque</a>
+            <a href="/adicionar.html">Adicionar</a>
+            <a href="/retirar.html">Retirar</a>
+            <a href="/retirados.html">Histórico</a>
+            <a href="/ia.html" class="selecionado">IA</a>
         </div>
-      </div>
+    </nav>
 
-      <!-- CAMPO DE PERGUNTA -->
-      <div class="campo-pergunta">
-        <input
-          type="text"
-          id="perguntaInput"
-          placeholder="Digite sua pergunta aqui..."
-          aria-label="Sua pergunta"
-          onkeydown="if(event.key === 'Enter') ia()"
-        >
+    <main class="container">
+        <h1>Assistente IA</h1>
+        <p>Tire suas dúvidas sobre ferramentas e materiais.</p>
 
-        <button
-          type="button"
-          onclick="ia()"
-          id="but"
-          aria-label="Enviar pergunta"
-        >➜</button>
-      </div>
+        <div class="caixa">
+            <h2>Faça sua pergunta</h2>
 
-      <!-- PERGUNTAS SUGERIDAS -->
-      <div class="sugestoes">
-        <h3>Não sabe o que perguntar? Experimente:</h3>
+            <div class="pergunta">
+                <input type="text" id="perguntaInput"
+                    placeholder="Digite sua pergunta..."
+                    onkeydown="if(event.key === 'Enter') ia()">
 
-        <div class="botoes-sugestoes">
-          <button class="sugestao"
-            onclick="perguntar('Para que serve uma parafusadeira?')">
-            🔧 Parafusadeira
-          </button>
+                <button id="but" onclick="ia()">Enviar</button>
+            </div>
 
-          <button class="sugestao"
-            onclick="perguntar('Como armazenar ferramentas corretamente?')">
-            📦 Armazenamento
-          </button>
+            <h3>Sugestões de perguntas:</h3>
 
-          <button class="sugestao"
-            onclick="perguntar('Quais EPIs utilizar ao trabalhar com ferramentas?')">
-            🦺 Segurança
-          </button>
+            <div class="sugestoes">
+                <button onclick="perguntar('Para que serve uma parafusadeira?')">
+                    Parafusadeira
+                </button>
 
-          <button class="sugestao"
-            onclick="perguntar('Qual a diferença entre furadeira e parafusadeira?')">
-            ⚙️ Ferramentas
-          </button>
+                <button onclick="perguntar('Como armazenar ferramentas corretamente?')">
+                    Armazenamento
+                </button>
+
+                <button onclick="perguntar('Quais EPIs utilizar ao trabalhar com ferramentas?')">
+                    Segurança
+                </button>
+            </div>
+
+            <h2>Resposta da IA</h2>
+
+            <div id="resultado">
+                Olá! Faça uma pergunta para começar.
+            </div>
         </div>
-      </div>
-
-      <!-- RESPOSTA -->
-      <section class="area-resposta">
-        <div class="resposta-titulo">
-          <span>✦</span> Resposta do Assistente
-        </div>
-
-        <div id="resultado" aria-live="polite">
-          Olá! 👋 Sou seu assistente virtual de almoxarifado.
-
-          Estou aqui para ajudar você a conhecer melhor
-          as ferramentas, os materiais e seus cuidados.
-          Faça sua primeira pergunta!
-        </div>
-
-        <p class="aviso">
-          As respostas são orientativas. Consulte os manuais
-          dos equipamentos e os procedimentos de segurança
-          aplicáveis antes de utilizar ferramentas.
-        </p>
-      </section>
-
-    </div>
-  </main>
-
-  <footer>
-    Almoxarifado SENAI • Assistente Virtual com Inteligência Artificial
-  </footer>
-
-  <script>
-    function perguntar(texto) {
-      document.getElementById('perguntaInput').value = texto;
-      ia();
-    }
-  </script>
-
-</body>
-</html>
+    </main>
