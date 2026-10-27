@@ -5,3 +5,69 @@ body {
     margin: 0;
     background-color: #FB9203;
 }
+
+
+/* NAVBAR SENAI */
+.navbar-senai {
+    background-color: #fb9203;
+    padding: 10px 30px;
+    min-height: 75px;
+}
+
+.navbar-senai .navbar-brand {
+    color: white;
+    font-size: 21px;
+    font-weight: 600;
+    margin-right: 35px;
+}
+
+.navbar-senai .navbar-brand:hover {
+    color: white;
+}
+
+.navbar-senai .nav-link {
+    color: #fff !important;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 10px 14px !important;
+    margin: 0 3px;
+    border-bottom: 2px solid transparent;
+    transition: 0.2s;
+}
+
+.navbar-senai .nav-link:hover {
+    color: #fff !important;
+    border-bottom-color: #ffffff80;
+}
+
+.navbar-senai .selecionado {
+    border-bottom-color: white;
+    font-weight: 600;
+}
+
+.logo-senai {
+    width: 155px;
+    height: auto;
+    object-fit: contain;
+    margin-left: auto;
+}
+
+.navbar-senai .navbar-toggler {
+    border-color: #ffffff80;
+    background-color: #fff;
+}
+
+@media (max-width: 991px) {
+    .navbar-senai {
+        padding: 12px 18px;
+    }
+
+    .navbar-senai .nav-link {
+        margin: 3px 0;
+    }
+
+    .logo-senai {
+        width: 130px;
+        margin: 15px 0 5px;
+    }
+}

@@ -60,15 +60,6 @@ button:hover {
 .container-fluid {
    color: #000000;
 }
-
-#navbarNav{
-    background-attachment: #FB9203;
-    height: 80px;
-    font-size: 30px;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    font-style: italic;
-    position: relative;
-}
 #oi{
     padding: 0%;
 }
@@ -154,3 +145,42 @@ button:hover {
     transform: scale(1.05);
     background-color: rgb(226, 205, 17);
 }
+
+.navbar-senai {
+    background: #fb9203;
+    padding: 5px 20px;
+    min-height: 70px;
+}
+
+.navbar-senai .navbar-brand {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 25px;
+}
+
+.navbar-senai .nav-link {
+    color: white !important;
+    font-size: 20px;
+    padding: 8px 10px !important;
+    margin: 0 5px;
+    border-bottom: 2px solid transparent;
+}
+
+.navbar-senai .nav-link:hover,
+.navbar-senai .selecionado {
+    border-bottom-color: white;
+}
+
+.logo-senai {
+    width: 210px;
+    height: 55px;
+    object-fit: cover;
+    object-position: center;
+    margin-left: auto;
+}
+
+.navbar-senai .navbar-toggler {
+    background: white;
+}
+
