@@ -1,8 +1,3 @@
-
-* {
-    box-sizing: border-box;
-}
-
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -12,36 +7,43 @@ body {
 /* NAVBAR */
 .navbar-senai {
     background: #fb9203;
-    padding: 22px 35px;
-    display: flex;
-    align-items: center;
-    gap: 35px;
+    padding: 5px 20px;
+    min-height: 70px;
 }
 
-.titulo {
+.navbar-senai .navbar-brand {
     color: white;
     font-size: 24px;
     font-weight: bold;
-    text-decoration: none;
+    margin-right: 25px;
 }
 
-.menu {
-    display: flex;
-    gap: 25px;
-}
-
-.menu a {
-    color: white;
-    font-size: 18px;
-    text-decoration: none;
-    padding: 8px 0;
+.navbar-senai .nav-link {
+    color: white !important;
+    font-size: 20px;
+    padding: 8px 10px !important;
+    margin: 0 5px;
     border-bottom: 2px solid transparent;
 }
 
-.menu a:hover,
-.menu .selecionado {
+.navbar-senai .nav-link:hover,
+.navbar-senai .selecionado {
     border-bottom-color: white;
 }
+
+.logo-senai {
+    width: 210px;
+    height: 55px;
+    object-fit: cover;
+    object-position: center;
+    margin-left: auto;
+}
+
+.navbar-senai .navbar-toggler {
+    background: white;
+}
+
+
 
 /* CONTEÚDO */
 .container {
@@ -62,7 +64,7 @@ body {
     margin-bottom: 30px;
 }
 
-/* CAIXA DA IA */
+/* blocao grande */
 .caixa {
     background: #ddd;
     padding: 35px;
@@ -137,34 +139,4 @@ body {
     line-height: 1.6;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-}
-
-/* CELULAR */
-@media (max-width: 600px) {
-    .navbar-senai {
-        flex-wrap: wrap;
-        padding: 15px;
-        gap: 15px;
-    }
-
-    .menu {
-        gap: 15px;
-        flex-wrap: wrap;
-    }
-
-    .menu a {
-        font-size: 15px;
-    }
-
-    .container {
-        margin-top: 30px;
-    }
-
-    .caixa {
-        padding: 20px;
-    }
-
-    .pergunta {
-        flex-direction: column;
-    }
 }

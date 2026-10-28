@@ -10,7 +10,7 @@ import * as Picker from 'expo-document-picker';
 import * as FS from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
-const API = 'http://10.154.20.107:5000';
+const API = 'http://192.168.4.2:5000';
 const AZUL = '#005CA9';
 
 type Produto = {

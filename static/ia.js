@@ -52,3 +52,8 @@ async function ia() {
 function ocultarOverlay(elemento) {
   elemento.style.display = 'none';
 }
+
+function perguntar(texto) {
+    document.getElementById("perguntaInput").value = texto;
+    ia();
+}

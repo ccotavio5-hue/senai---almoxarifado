@@ -39,7 +39,8 @@
         {
           "photosPermission": "O aplicativo precisa de acesso às suas fotos para cadastrar imagens no estoque."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

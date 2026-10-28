@@ -12,9 +12,15 @@ npm install
 
 npm ls expo
 
+npx expo install expo-document-picker expo-file-system expo-sharing
+
 npx expo start --clear
 
-npx expo install expo-document-picker expo-file-system expo-sharing
+npx expo start --tunnel (para acessar de outro celular)
+
+npx expo start --clear --lan
+
+npx expo install --check (ver as versoes)
 
 =====docker======
 

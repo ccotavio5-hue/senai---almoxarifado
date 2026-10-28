@@ -19,7 +19,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 conexao = {
     "host": os.getenv("DB_HOST", "localhost"),
     "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
+    "password": os.getenv("DB_PASSWORD", "1234"),
     "database": os.getenv("DB_NAME", "tcc")
 }
 
