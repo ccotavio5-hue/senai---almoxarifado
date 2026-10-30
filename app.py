@@ -443,69 +443,59 @@ def retirados():
 # IMPORTAR CSV
 # =========================================================
 
-@app.route('/importarcsv', methods=['POST'])
-def importar_csv():
+@app.route('/api/importar-csv', methods=['POST'])
+def api_importar_csv():
     arquivo = request.files.get('arquivo')
-    
+
     if not arquivo:
-        return """
-        <script>
-            alert("Nenhum arquivo enviado!");
-            window.location.href="/estoque.html";
-        </script>
-        """
+        return jsonify(sucesso=False, mensagem="Selecione um CSV"), 400
 
-    # Lê o conteúdo do arquivo
-    conteudo_texto = arquivo.stream.read().decode("utf-8")
-    
-    # Detecta automaticamente se o CSV usa ';' ou ',' como separador
-    separador = ';' if ';' in conteudo_texto else ','
-    
-    conteudo = conteudo_texto.splitlines()
-    leitor = csv.reader(conteudo, delimiter=separador)
+    try:
+        texto = arquivo.read().decode('utf-8-sig')
+        linhas = list(csv.reader(
+            texto.splitlines(),
+            delimiter=';' if ';' in texto.splitlines()[0] else ','
+        ))
 
-    # Ignora a primeira linha (cabeçalho)
-    next(leitor, None)
+        cabecalho = [c.strip().upper() for c in linhas[0]]
+        tem_id = cabecalho[0] == 'ID'
 
-    conexao = conectar()
-    cursor = conexao.cursor()
+        conexao = conectar()
+        cursor = conexao.cursor()
+        total = 0
 
-    for linha in leitor:
-        # Pula linhas vazias
-        if not linha:
-            continue
+        for linha in linhas[1:]:
+            if not linha:
+                continue
 
-        item = linha[0] if len(linha) > 0 else ''
-        descricao = linha[1] if len(linha) > 1 else ''
-        
-        # Converte a quantidade com segurança
-        try:
-            quantidade = int(linha[2]) if len(linha) > 2 else 0
-        except ValueError:
-            quantidade = 0
+            if tem_id:
+                linha = linha[1:]
 
-        imagem = linha[3] if len(linha) > 3 else ''
+            if len(linha) < 3:
+                continue
 
-        # Insere se tiver pelo menos o nome do item
-        if item:
-            cursor.execute(
-                """
-                INSERT INTO estoque (item, descricao, quantidade, imagem)
-                VALUES (%s, %s, %s, %s)
-                """,
-                (item, descricao, quantidade, imagem)
-            )
+            item = linha[0].strip()
+            descricao = linha[1].strip()
+            quantidade = int(linha[2])
+            imagem = linha[3] if len(linha) > 3 else ''
 
-    conexao.commit()
-    cursor.close()
-    conexao.close()
+            if item:
+                cursor.execute(
+                    """INSERT INTO estoque
+                    (item, descricao, quantidade, imagem)
+                    VALUES (%s, %s, %s, %s)""",
+                    (item, descricao, quantidade, imagem)
+                )
+                total += 1
 
-    return """
-    <script>
-        alert("CSV importado com sucesso!");
-        window.location.href="/estoque.html";
-    </script>
-    """
+        conexao.commit()
+        cursor.close()
+        conexao.close()
+
+        return jsonify(sucesso=True, importados=total)
+
+    except Exception as erro:
+        return jsonify(sucesso=False, mensagem=str(erro)), 400
 
 # =========================================================
 # EXPORTAR CSV

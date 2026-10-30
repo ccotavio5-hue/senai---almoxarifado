@@ -14,11 +14,11 @@ npm ls expo
 
 npx expo install expo-document-picker expo-file-system expo-sharing
 
+npx expo install expo-image-picker expo-file-system expo-router react-native-safe-area-context expo-document-picker expo-sharing
+
 npx expo start --clear
 
-npx expo start --tunnel (para acessar de outro celular)
-
-npx expo start --clear --lan
+npx expo start --clear --tunnel ngrok
 
 npx expo install --check (ver as versoes)
 
