@@ -51,7 +51,7 @@ export default function HistoricoScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#005CA9" />
+      <StatusBar barStyle="light-content"/>
 
       {/* Cabeçalho */}
       <View style={styles.header}>
@@ -72,6 +72,9 @@ export default function HistoricoScreen() {
         </TouchableOpacity>
         <TouchableOpacity style={[styles.navItem, styles.navItemAtivo]}>
           <Text style={styles.navTextAtivo}>Histórico</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/ia')}>
+          <Text style={styles.navText}>IA</Text>
         </TouchableOpacity>
       </View>
 
@@ -117,8 +120,8 @@ const styles = StyleSheet.create({
   navBar: { flexDirection: 'row', backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEE' },
   navItem: { flex: 1, paddingVertical: 12, alignItems: 'center' },
   navItemAtivo: { borderBottomWidth: 3, borderBottomColor: '#005CA9' },
-  navText: { fontSize: 13, fontWeight: '600', color: '#666' },
-  navTextAtivo: { fontSize: 13, fontWeight: 'bold', color: '#005CA9' },
+  navText: { fontSize: 12, fontWeight: '600', color: '#666' },
+  navTextAtivo: { fontSize: 12, fontWeight: 'bold', color: '#005CA9' },
   content: { flex: 1, padding: 16 },
   cardHistorico: {
     flexDirection: 'row',

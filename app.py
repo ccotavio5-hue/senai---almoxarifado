@@ -443,59 +443,69 @@ def retirados():
 # IMPORTAR CSV
 # =========================================================
 
-@app.route('/api/importar-csv', methods=['POST'])
-def api_importar_csv():
+@app.route('/importarcsv', methods=['POST'])
+def importar_csv():
     arquivo = request.files.get('arquivo')
-
+    
     if not arquivo:
-        return jsonify(sucesso=False, mensagem="Selecione um CSV"), 400
+        return """
+        <script>
+            alert("Nenhum arquivo enviado!");
+            window.location.href="/estoque.html";
+        </script>
+        """
 
-    try:
-        texto = arquivo.read().decode('utf-8-sig')
-        linhas = list(csv.reader(
-            texto.splitlines(),
-            delimiter=';' if ';' in texto.splitlines()[0] else ','
-        ))
+    # Lê o conteúdo do arquivo
+    conteudo_texto = arquivo.stream.read().decode("utf-8")
+    
+    # Detecta automaticamente se o CSV usa ';' ou ',' como separador
+    separador = ';' if ';' in conteudo_texto else ','
+    
+    conteudo = conteudo_texto.splitlines()
+    leitor = csv.reader(conteudo, delimiter=separador)
 
-        cabecalho = [c.strip().upper() for c in linhas[0]]
-        tem_id = cabecalho[0] == 'ID'
+    # Ignora a primeira linha (cabeçalho)
+    next(leitor, None)
 
-        conexao = conectar()
-        cursor = conexao.cursor()
-        total = 0
+    conexao = conectar()
+    cursor = conexao.cursor()
 
-        for linha in linhas[1:]:
-            if not linha:
-                continue
+    for linha in leitor:
+        # Pula linhas vazias
+        if not linha:
+            continue
 
-            if tem_id:
-                linha = linha[1:]
+        item = linha[0] if len(linha) > 0 else ''
+        descricao = linha[1] if len(linha) > 1 else ''
+        
+        # Converte a quantidade com segurança
+        try:
+            quantidade = int(linha[2]) if len(linha) > 2 else 0
+        except ValueError:
+            quantidade = 0
 
-            if len(linha) < 3:
-                continue
+        imagem = linha[3] if len(linha) > 3 else ''
 
-            item = linha[0].strip()
-            descricao = linha[1].strip()
-            quantidade = int(linha[2])
-            imagem = linha[3] if len(linha) > 3 else ''
+        # Insere se tiver pelo menos o nome do item
+        if item:
+            cursor.execute(
+                """
+                INSERT INTO estoque (item, descricao, quantidade, imagem)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (item, descricao, quantidade, imagem)
+            )
 
-            if item:
-                cursor.execute(
-                    """INSERT INTO estoque
-                    (item, descricao, quantidade, imagem)
-                    VALUES (%s, %s, %s, %s)""",
-                    (item, descricao, quantidade, imagem)
-                )
-                total += 1
+    conexao.commit()
+    cursor.close()
+    conexao.close()
 
-        conexao.commit()
-        cursor.close()
-        conexao.close()
-
-        return jsonify(sucesso=True, importados=total)
-
-    except Exception as erro:
-        return jsonify(sucesso=False, mensagem=str(erro)), 400
+    return """
+    <script>
+        alert("CSV importado com sucesso!");
+        window.location.href="/estoque.html";
+    </script>
+    """
 
 # =========================================================
 # EXPORTAR CSV
@@ -555,6 +565,126 @@ def apagar_estoque():
 # =========================================================
 # ROTA NOVA DO ESTOQUE
 # =========================================================
+
+@app.route('/api/deletar/<int:id>', methods=['DELETE'])
+def api_deletar_item(id):
+    banco = conectar()
+    cursor = banco.cursor()
+    try:
+        cursor.execute('DELETE FROM estoque WHERE id = %s', (id,))
+        if cursor.rowcount == 0:
+            banco.rollback()
+            return jsonify(sucesso=False, mensagem='Produto não encontrado.'), 404
+        banco.commit()
+        return jsonify(sucesso=True, mensagem='Produto excluído!')
+    except Exception:
+        banco.rollback()
+        app.logger.exception('Erro ao excluir item')
+        return jsonify(sucesso=False, mensagem='Erro ao excluir produto.'), 500
+    finally:
+        cursor.close()
+        banco.close()
+
+
+@app.route('/api/importar-csv', methods=['POST'])
+def api_importar_csv_mobile():
+    import io
+    arquivo = request.files.get('arquivo')
+    if not arquivo or not arquivo.filename.lower().endswith('.csv'):
+        return jsonify(sucesso=False, mensagem='Selecione um arquivo CSV.'), 400
+
+    try:
+        texto = arquivo.read().decode('utf-8-sig')
+        amostra = texto[:4096]
+        delimitador = csv.Sniffer().sniff(amostra, delimiters=';,').delimiter if amostra.strip() else ';'
+        leitor = csv.DictReader(io.StringIO(texto), delimiter=delimitador)
+        if not leitor.fieldnames:
+            return jsonify(sucesso=False, mensagem='CSV vazio.'), 400
+
+        # Aceita CSV exportado pelo aplicativo (ID;Item;Descrição;Quantidade;Imagem)
+        # e arquivos com Item;Descrição;Quantidade;Imagem.
+        def normalizar(campo):
+            import unicodedata
+            return ''.join(c for c in unicodedata.normalize('NFKD', campo or '')
+                           if not unicodedata.combining(c)).strip().lower()
+
+        campos = {normalizar(c): c for c in leitor.fieldnames}
+        if 'item' not in campos or 'quantidade' not in campos:
+            return jsonify(sucesso=False, mensagem='CSV precisa das colunas Item e Quantidade.'), 400
+
+        produtos = []
+        for numero_linha, linha in enumerate(leitor, start=2):
+            item = (linha.get(campos['item']) or '').strip()
+            if not item:
+                continue
+            try:
+                quantidade = int((linha.get(campos['quantidade']) or '').strip())
+            except ValueError:
+                return jsonify(sucesso=False, mensagem=f'Quantidade inválida na linha {numero_linha}.'), 400
+            if quantidade < 0:
+                return jsonify(sucesso=False, mensagem=f'Quantidade negativa na linha {numero_linha}.'), 400
+            descricao = (linha.get(campos.get('descricao', ''), '') or '').strip()
+            imagem = (linha.get(campos.get('imagem', ''), '') or '').strip()
+            produtos.append((item, descricao, quantidade, imagem))
+
+        banco = conectar()
+        cursor = banco.cursor()
+        try:
+            for item, descricao, quantidade, imagem in produtos:
+                cursor.execute('SELECT id FROM estoque WHERE item = %s', (item,))
+                existente = cursor.fetchone()
+                if existente:
+                    cursor.execute('UPDATE estoque SET quantidade = quantidade + %s WHERE id = %s',
+                                   (quantidade, existente[0]))
+                else:
+                    cursor.execute('INSERT INTO estoque (item, descricao, quantidade, imagem) VALUES (%s, %s, %s, %s)',
+                                   (item, descricao, quantidade, imagem or 'padrao.png'))
+            banco.commit()
+        except Exception:
+            banco.rollback()
+            raise
+        finally:
+            cursor.close()
+            banco.close()
+        return jsonify(sucesso=True, importados=len(produtos), mensagem='CSV importado!')
+    except csv.Error:
+        return jsonify(sucesso=False, mensagem='Formato CSV inválido.'), 400
+    except UnicodeDecodeError:
+        return jsonify(sucesso=False, mensagem='Salve o CSV em UTF-8.'), 400
+    except Exception:
+        app.logger.exception('Erro ao importar CSV')
+        return jsonify(sucesso=False, mensagem='Erro ao importar CSV.'), 500
+
+
+@app.route('/api/exportar-csv', methods=['GET'])
+def api_exportar_csv():
+    import io
+
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    cursor.execute(
+        "SELECT id, item, descricao, quantidade, imagem FROM estoque"
+    )
+    produtos = cursor.fetchall()
+
+    cursor.close()
+    conexao.close()
+
+    arquivo = io.StringIO()
+    arquivo.write('\ufeff')
+
+    escritor = csv.writer(arquivo, delimiter=';')
+    escritor.writerow(['ID', 'Item', 'Descrição', 'Quantidade', 'Imagem'])
+    escritor.writerows(produtos)
+
+    return Response(
+        arquivo.getvalue(),
+        mimetype='text/csv; charset=utf-8',
+        headers={
+            'Content-Disposition': 'attachment; filename=estoque.csv'
+        }
+    )
 
 
 @app.route('/api/estoque', methods=['GET'])
@@ -826,64 +956,6 @@ def api_login():
         return jsonify({'sucesso': True, 'mensagem': 'Login de Utilizador efetuado!', 'tipo': 'user'}), 200
 
     return jsonify({'sucesso': False, 'mensagem': 'Utilizador ou senha incorretos!'}), 401
-
-
-# =========================================================
-# ROTAS ADICIONAIS DE AUTENTICAÇÃO / SESSÃO PARA O APP
-# =========================================================
-
-# Configuração de CORS atualizada para permitir o envio de sessão/cookies
-CORS(app, supports_credentials=True)
-
-
-@app.route('/api/me', methods=['GET'])
-def api_obter_usuario_logado():
-    """Retorna os dados do usuário atualmente logado na sessão."""
-    usuario = session.get('usuario')
-    tipo = session.get('tipo')
-
-    if usuario:
-        return jsonify({
-            'sucesso': True,
-            'logado': True,
-            'usuario': usuario,
-            'tipo': tipo
-        }), 200
-
-    return jsonify({
-        'sucesso': False,
-        'logado': False,
-        'mensagem': 'Nenhum usuário logado na sessão.'
-    }), 401
-
-
-@app.route('/api/logout', methods=['POST'])
-def api_logout():
-    """Encerra a sessão do usuário no aplicativo."""
-    session.clear()
-    return jsonify({
-        'sucesso': True,
-        'mensagem': 'Logout realizado com sucesso!'
-    }), 200
-
-
-@app.route('/api/verificar-sessao-adm', methods=['GET'])
-def api_verificar_sessao_adm():
-    """Verifica se o usuário atual confirmou a credencial de Administrador."""
-    if session.get('adm_verificado'):
-        return jsonify({
-            'sucesso': True,
-            'adm_verificado': True
-        }), 200
-
-    return jsonify({
-        'sucesso': False,
-        'adm_verificado': False,
-        'mensagem': 'Acesso restrito. Requer autenticação de administrador.'
-    }), 403
-
-
-
 
 # =========================================================
 # INICIAR SERVIDOR

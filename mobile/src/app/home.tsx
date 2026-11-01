@@ -138,12 +138,12 @@ export default function HomeScreen() {
       </View>
 
       <View style={s.menu}>
-        {['Estoque', 'Adicionar', 'Retirar', 'Histórico'].map((nome, i) => (
+        {['Estoque', 'Adicionar', 'Retirar', 'Histórico', 'IA'].map((nome, i) => (
           <TouchableOpacity
             key={nome}
             style={[s.aba, i === 0 && s.ativa]}
             onPress={() => {
-              const rotas = ['/','/adicionar','/retirar','/historico'] as const;
+              const rotas = ['/','/adicionar','/retirar','/historico','/ia'] as const;
               if (i > 0) router.push(rotas[i]);
             }}
           >

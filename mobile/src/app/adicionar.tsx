@@ -16,7 +16,8 @@ const abas = [
   { nome: 'Estoque', rota: '/home' },
   { nome: 'Adicionar', rota: '/adicionar' },
   { nome: 'Retirar', rota: '/retirar' },
-  { nome: 'Histórico', rota: '/historico' }
+  { nome: 'Histórico', rota: '/historico' },
+  { nome: 'IA', rota: '/ia' }
 ] as const;
 
 export default function AdicionarItemScreen() {
@@ -97,7 +98,7 @@ export default function AdicionarItemScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#005CA9" />
+      <StatusBar barStyle="light-content" />
 
       <View style={styles.header}>
         <Text style={styles.titulo}>Almoxarifado SENAI</Text>
@@ -160,8 +161,8 @@ const styles = StyleSheet.create({
   navBar: { flexDirection: 'row', backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEE' },
   navItem: { flex: 1, paddingVertical: 12, alignItems: 'center' },
   ativo: { borderBottomWidth: 3, borderBottomColor: '#005CA9' },
-  navText: { fontSize: 13, fontWeight: '600', color: '#666' },
-  textoAtivo: { fontSize: 13, fontWeight: 'bold', color: '#005CA9' },
+  navText: { fontSize: 12, fontWeight: '600', color: '#666' },
+  textoAtivo: { fontSize: 12, fontWeight: 'bold', color: '#005CA9' },
   content: { padding: 16 },
   card: { backgroundColor: '#FFF', borderRadius: 10, padding: 16, elevation: 2 },
   label: { fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 6 },
