@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Picker from 'expo-document-picker';
 import * as FS from 'expo-file-system';
+import * as LegacyFS from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 const API = 'http://192.168.4.2:5000';
@@ -25,6 +26,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [ocupado, setOcupado] = useState(false);
 
+  // Busca os produtos no Flask.
   const carregar = useCallback(async () => {
     try {
       const r = await fetch(`${API}/api/estoque`);
@@ -42,6 +44,7 @@ export default function HomeScreen() {
     carregar();
   }, [carregar]));
 
+  // Cria e compartilha o CSV no celular.
   const exportar = async () => {
     try {
       const esc = (v: unknown) =>
@@ -61,57 +64,83 @@ export default function HomeScreen() {
     }
   };
 
+  // Envia o conteúdo do CSV em JSON: sem FormData nem uploadAsync.
+  const enviarCSV = async (texto: string) => {
+    if (!texto.trim()) throw new Error('O CSV está vazio.');
+    const resposta = await fetch(`${API}/api/importar-csv`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ csv: texto }),
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok || !dados.sucesso) {
+      throw new Error(dados.mensagem || dados.erro || `Erro HTTP ${resposta.status}`);
+    }
+    await carregar();
+    return dados.mensagem || 'CSV importado com sucesso!';
+  };
+
   const importar = async () => {
     try {
+      // Mantém o URI original do seletor do Android (content://).
       const doc = await Picker.getDocumentAsync({
-        type: '*/*', copyToCacheDirectory: true
+        type: ['text/csv', 'text/comma-separated-values', 'application/vnd.ms-excel', '*/*'],
+        copyToCacheDirectory: false,
       });
-      if (doc.canceled) return;
-      const arq = doc.assets[0];
-      if (!arq.name.toLowerCase().endsWith('.csv'))
-        return Alert.alert('Erro', 'Selecione um arquivo CSV.');
-
-      const form = new FormData();
-      form.append('arquivo', {
-        uri: arq.uri, name: arq.name, type: 'text/csv'
-      } as any);
-
+      if (doc.canceled || !doc.assets?.length) return;
+      const arquivo = doc.assets[0];
+      if (!arquivo.name.toLowerCase().endsWith('.csv')) {
+        Alert.alert('Arquivo inválido', 'Selecione um arquivo .csv');
+        return;
+      }
       setOcupado(true);
-      const r = await fetch(`${API}/api/importar-csv`, {
-        method: 'POST', body: form
-      });
-      const d = await r.json();
-      if (!r.ok || !d.sucesso) throw Error();
-      Alert.alert('Sucesso', 'CSV importado!');
-      carregar();
-    } catch {
-      Alert.alert('Erro', 'Falha ao importar CSV.');
+      let texto: string;
+      try {
+        // O Storage Access Framework lê URIs de documentos Android.
+        texto = await LegacyFS.readAsStringAsync(arquivo.uri, {
+          encoding: LegacyFS.EncodingType.UTF8,
+        });
+      } catch (erroLeitura) {
+        try {
+          // Alternativa para provedores que disponibilizam o URI via fetch.
+          const respostaArquivo = await fetch(arquivo.uri);
+          if (!respostaArquivo.ok) throw new Error('Arquivo inacessível');
+          texto = await respostaArquivo.text();
+        } catch {
+          throw new Error('O Android não permitiu ler o CSV selecionado. ' +
+            'Tente escolher o arquivo pelo app Arquivos, em Downloads. ' +
+            'Detalhe: ' + String(erroLeitura));
+        }
+      }
+      const mensagem = await enviarCSV(texto);
+      Alert.alert('Sucesso', mensagem);
+    } catch (erro) {
+      Alert.alert('Erro ao importar', erro instanceof Error ? erro.message : 'Erro desconhecido.');
     } finally {
       setOcupado(false);
     }
   };
 
-  const excluir = (id?: number) => Alert.alert(
-    'Confirmar exclusão',
-    id !== undefined ? 'Excluir este item?' : 'Excluir TODO o estoque?',
+  // Exclui todo o estoque, somente depois de confirmar.
+  const excluirTabela = () => Alert.alert(
+    'Excluir tabela',
+    'Tem certeza que deseja apagar TODOS os produtos do estoque?',
     [
       { text: 'Cancelar', style: 'cancel' },
       {
-        text: 'Excluir', style: 'destructive',
+        text: 'Excluir tudo', style: 'destructive',
         onPress: async () => {
+          setOcupado(true);
           try {
-            setOcupado(true);
-            const r = await fetch(
-              id !== undefined
-                ? `${API}/api/deletar/${id}`
-                : `${API}/api/estoque`,
-              { method: 'DELETE' }
-            );
+            const r = await fetch(`${API}/api/estoque`, { method: 'DELETE' });
             const d = await r.json();
-            if (!r.ok || !d.sucesso) throw Error();
+            if (!r.ok || !d.sucesso) {
+              throw Error(d.mensagem || d.erro || `Erro HTTP ${r.status}`);
+            }
             await carregar();
-          } catch {
-            Alert.alert('Erro', 'Não foi possível excluir.');
+            Alert.alert('Pronto', 'Estoque excluído com sucesso.');
+          } catch (erro) {
+            Alert.alert('Erro ao excluir', erro instanceof Error ? erro.message : 'Confira a conexão com o Flask.');
           } finally {
             setOcupado(false);
           }
@@ -157,7 +186,7 @@ export default function HomeScreen() {
       <View style={s.acoes}>
         {botao('Exportar CSV', '#16A34A', exportar)}
         {botao('Importar CSV', '#B5AD00', importar)}
-        {botao('Excluir tabela', '#B91C1C', () => excluir())}
+        {botao('Excluir tabela', '#B91C1C', excluirTabela)}
       </View>
 
       <Text style={s.total}>Total: {itens.length} itens</Text>
@@ -186,7 +215,6 @@ export default function HomeScreen() {
                   <Text style={s.quantidade}>Quantidade: {item.quantidade}</Text>
                 </View>
 
-                {botao('Excluir', '#B91C1C', () => excluir(item.id))}
               </View>
             );
           }}
@@ -229,5 +257,5 @@ const s = StyleSheet.create({
   quantidade: { fontSize: 12, color: AZUL, fontWeight: 'bold', marginTop: 5 },
   modal: { flex: 1, backgroundColor: '#000E', justifyContent: 'center', alignItems: 'center' },
   fechar: { position: 'absolute', top: 55, right: 25, padding: 12, zIndex: 1 },
-  fotoGrande: { width: '95%', height: '75%' }
+  fotoGrande: { width: '95%', height: '75%' },
 });

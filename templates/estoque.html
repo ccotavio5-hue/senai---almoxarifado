@@ -64,7 +64,6 @@
     </a>
 
     <form id="formImportar" action="/importarcsv" method="POST" enctype="multipart/form-data" style="margin: 0;">
-            <!-- Input de ficheiro totalmente escondido -->
             <input type="file" id="inputCSV" name="arquivo" accept=".csv" required onchange="this.form.submit()" style="display: none;">
 
             <button type="button" id="impor" onclick="document.getElementById('inputCSV').click()">

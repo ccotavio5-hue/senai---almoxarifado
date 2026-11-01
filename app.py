@@ -438,75 +438,6 @@ def retirados():
         historico=historico
     )
 
-
-# =========================================================
-# IMPORTAR CSV
-# =========================================================
-
-@app.route('/importarcsv', methods=['POST'])
-def importar_csv():
-    arquivo = request.files.get('arquivo')
-    
-    if not arquivo:
-        return """
-        <script>
-            alert("Nenhum arquivo enviado!");
-            window.location.href="/estoque.html";
-        </script>
-        """
-
-    # Lê o conteúdo do arquivo
-    conteudo_texto = arquivo.stream.read().decode("utf-8")
-    
-    # Detecta automaticamente se o CSV usa ';' ou ',' como separador
-    separador = ';' if ';' in conteudo_texto else ','
-    
-    conteudo = conteudo_texto.splitlines()
-    leitor = csv.reader(conteudo, delimiter=separador)
-
-    # Ignora a primeira linha (cabeçalho)
-    next(leitor, None)
-
-    conexao = conectar()
-    cursor = conexao.cursor()
-
-    for linha in leitor:
-        # Pula linhas vazias
-        if not linha:
-            continue
-
-        item = linha[0] if len(linha) > 0 else ''
-        descricao = linha[1] if len(linha) > 1 else ''
-        
-        # Converte a quantidade com segurança
-        try:
-            quantidade = int(linha[2]) if len(linha) > 2 else 0
-        except ValueError:
-            quantidade = 0
-
-        imagem = linha[3] if len(linha) > 3 else ''
-
-        # Insere se tiver pelo menos o nome do item
-        if item:
-            cursor.execute(
-                """
-                INSERT INTO estoque (item, descricao, quantidade, imagem)
-                VALUES (%s, %s, %s, %s)
-                """,
-                (item, descricao, quantidade, imagem)
-            )
-
-    conexao.commit()
-    cursor.close()
-    conexao.close()
-
-    return """
-    <script>
-        alert("CSV importado com sucesso!");
-        window.location.href="/estoque.html";
-    </script>
-    """
-
 # =========================================================
 # EXPORTAR CSV
 # =========================================================
@@ -517,25 +448,34 @@ def exportar_csv():
     conexao = conectar()
     cursor = conexao.cursor()
 
-    cursor.execute("SELECT id, item, descricao, quantidade FROM estoque")
+    cursor.execute(
+        "SELECT id, item, descricao, quantidade, imagem FROM estoque"
+    )
     produtos = cursor.fetchall()
 
     cursor.close()
     conexao.close()
 
-    # Cabeçalho com UTF-8 BOM (\ufeff) para abrir correto no Excel
-    conteudo_csv = "\ufeffID;Item;Descrição;Quantidade\n"
-    
-    for prod in produtos:
-        # Trata os textos para evitar quebrar o CSV se tiver aspas
-        item = str(prod[1]).replace('"', '""')
-        descricao = str(prod[2]).replace('"', '""')
-        
-        conteudo_csv += f'{prod[0]};"{item}";"{descricao}";{prod[3]}\n'
+    conteudo_csv = "\ufeffID;Item;Descrição;Quantidade;Imagem\n"
 
-    resposta = Response(conteudo_csv, mimetype='text/csv')
-    resposta.headers["Content-Disposition"] = "attachment; filename=estoque.csv"
-    
+    for prod in produtos:
+        item = str(prod[1] or '').replace('"', '""')
+        descricao = str(prod[2] or '').replace('"', '""')
+        imagem = str(prod[4] or '').replace('"', '""')
+
+        conteudo_csv += (
+            f'{prod[0]};"{item}";"{descricao}";{prod[3]};"{imagem}"\n'
+        )
+
+    resposta = Response(
+        conteudo_csv,
+        mimetype='text/csv; charset=utf-8'
+    )
+
+    resposta.headers["Content-Disposition"] = (
+        "attachment; filename=estoque.csv"
+    )
+
     return resposta
 
 # =========================================================
@@ -544,6 +484,14 @@ def exportar_csv():
 
 @app.route('/excluirtabela', methods=['POST'])
 def apagar_estoque():
+
+    if session.get('tipo') != 'adm':
+            return """
+            <script>
+                alert("Acesso negado! Apenas administradores podem excluir o estoque.");
+                window.location.href="/estoque.html";
+            </script>
+            """, 403
 
     conexao = conectar()
     cursor = conexao.cursor()
@@ -566,66 +514,77 @@ def apagar_estoque():
 # ROTA NOVA DO ESTOQUE
 # =========================================================
 
-@app.route('/api/deletar/<int:id>', methods=['DELETE'])
-def api_deletar_item(id):
+@app.route('/api/estoque', methods=['DELETE'])
+def api_excluir_estoque():
+    if session.get('tipo') != 'adm':
+        return jsonify({
+            'sucesso': False,
+            'mensagem': 'Acesso de administrador necessário.'
+        }), 403
+
     banco = conectar()
     cursor = banco.cursor()
+
     try:
-        cursor.execute('DELETE FROM estoque WHERE id = %s', (id,))
-        if cursor.rowcount == 0:
-            banco.rollback()
-            return jsonify(sucesso=False, mensagem='Produto não encontrado.'), 404
+        cursor.execute('DELETE FROM estoque')
         banco.commit()
-        return jsonify(sucesso=True, mensagem='Produto excluído!')
+
+        return jsonify({
+            'sucesso': True,
+            'mensagem': 'Estoque excluído com sucesso!'
+        }), 200
+
     except Exception:
         banco.rollback()
-        app.logger.exception('Erro ao excluir item')
-        return jsonify(sucesso=False, mensagem='Erro ao excluir produto.'), 500
+        app.logger.exception('Erro ao excluir estoque')
+
+        return jsonify({
+            'sucesso': False,
+            'mensagem': 'Erro ao excluir estoque.'
+        }), 500
+
     finally:
         cursor.close()
         banco.close()
+        
 
 
 @app.route('/api/importar-csv', methods=['POST'])
 def api_importar_csv_mobile():
     import io
-    arquivo = request.files.get('arquivo')
-    if not arquivo or not arquivo.filename.lower().endswith('.csv'):
-        return jsonify(sucesso=False, mensagem='Selecione um arquivo CSV.'), 400
+    import unicodedata
+
+    dados = request.get_json(silent=True) or {}
+    texto = dados.get('csv')
+    if not isinstance(texto, str) or not texto.strip():
+        return jsonify(sucesso=False, mensagem='CSV vazio ou não enviado.'), 400
+
+    def normalizar(valor):
+        return ''.join(c for c in unicodedata.normalize('NFKD', valor or '')
+                       if not unicodedata.combining(c)).strip().lower().lstrip('\ufeff')
 
     try:
-        texto = arquivo.read().decode('utf-8-sig')
         amostra = texto[:4096]
-        delimitador = csv.Sniffer().sniff(amostra, delimiters=';,').delimiter if amostra.strip() else ';'
-        leitor = csv.DictReader(io.StringIO(texto), delimiter=delimitador)
-        if not leitor.fieldnames:
-            return jsonify(sucesso=False, mensagem='CSV vazio.'), 400
-
-        # Aceita CSV exportado pelo aplicativo (ID;Item;Descrição;Quantidade;Imagem)
-        # e arquivos com Item;Descrição;Quantidade;Imagem.
-        def normalizar(campo):
-            import unicodedata
-            return ''.join(c for c in unicodedata.normalize('NFKD', campo or '')
-                           if not unicodedata.combining(c)).strip().lower()
-
-        campos = {normalizar(c): c for c in leitor.fieldnames}
+        delimitador = csv.Sniffer().sniff(amostra, delimiters=';,').delimiter
+        leitor = csv.DictReader(io.StringIO(texto.lstrip('\ufeff')), delimiter=delimitador)
+        campos = {normalizar(c): c for c in (leitor.fieldnames or [])}
         if 'item' not in campos or 'quantidade' not in campos:
-            return jsonify(sucesso=False, mensagem='CSV precisa das colunas Item e Quantidade.'), 400
+            return jsonify(sucesso=False, mensagem='CSV precisa de Item e Quantidade.'), 400
 
         produtos = []
-        for numero_linha, linha in enumerate(leitor, start=2):
+        for numero, linha in enumerate(leitor, 2):
             item = (linha.get(campos['item']) or '').strip()
             if not item:
                 continue
             try:
                 quantidade = int((linha.get(campos['quantidade']) or '').strip())
             except ValueError:
-                return jsonify(sucesso=False, mensagem=f'Quantidade inválida na linha {numero_linha}.'), 400
+                return jsonify(sucesso=False, mensagem=f'Quantidade inválida na linha {numero}.'), 400
             if quantidade < 0:
-                return jsonify(sucesso=False, mensagem=f'Quantidade negativa na linha {numero_linha}.'), 400
+                return jsonify(sucesso=False, mensagem=f'Quantidade negativa na linha {numero}.'), 400
             descricao = (linha.get(campos.get('descricao', ''), '') or '').strip()
-            imagem = (linha.get(campos.get('imagem', ''), '') or '').strip()
-            produtos.append((item, descricao, quantidade, imagem))
+            imagem = (linha.get(campos.get('imagem', campos.get('foto', '')), '') or '').strip()
+            produtos.append((item, descricao, quantidade, imagem or 'padrao.png'))
 
         banco = conectar()
         cursor = banco.cursor()
@@ -638,7 +597,7 @@ def api_importar_csv_mobile():
                                    (quantidade, existente[0]))
                 else:
                     cursor.execute('INSERT INTO estoque (item, descricao, quantidade, imagem) VALUES (%s, %s, %s, %s)',
-                                   (item, descricao, quantidade, imagem or 'padrao.png'))
+                                   (item, descricao, quantidade, imagem))
             banco.commit()
         except Exception:
             banco.rollback()
@@ -646,11 +605,9 @@ def api_importar_csv_mobile():
         finally:
             cursor.close()
             banco.close()
-        return jsonify(sucesso=True, importados=len(produtos), mensagem='CSV importado!')
+        return jsonify(sucesso=True, importados=len(produtos), mensagem='CSV importado com sucesso!')
     except csv.Error:
         return jsonify(sucesso=False, mensagem='Formato CSV inválido.'), 400
-    except UnicodeDecodeError:
-        return jsonify(sucesso=False, mensagem='Salve o CSV em UTF-8.'), 400
     except Exception:
         app.logger.exception('Erro ao importar CSV')
         return jsonify(sucesso=False, mensagem='Erro ao importar CSV.'), 500
