@@ -28,4 +28,12 @@ npx expo install --check (ver as versoes)
 
 docker compose up -d --build
 
+docker compose up -d
+
 docker ps
+
+=====gitHub=======
+
+git add .
+git commit -m "Atualizacao do projeto"
+git push origin main
