@@ -4,7 +4,7 @@ import { StatusBar } from 'react-native';
 export default function RootLayout() {
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#005CA9" />
+      <StatusBar barStyle="light-content" />
       <Stack
         screenOptions={{
           headerShown: false,

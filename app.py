@@ -19,7 +19,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 conexao = {
     "host": os.getenv("DB_HOST", "localhost"),
     "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", "1234"),
+    "password": os.getenv("DB_PASSWORD", ""),
     "database": os.getenv("DB_NAME", "tcc")
 }
 
@@ -477,6 +477,60 @@ def exportar_csv():
     )
 
     return resposta
+
+# =========================================================
+# IMPORTAR CSV
+# =========================================================
+
+
+@app.route('/importarcsv', methods=['POST'])
+def importar_csv():
+    arquivo = request.files.get('arquivo')
+
+    if not arquivo:
+        return "Nenhum arquivo enviado!", 400
+
+    linhas = arquivo.read().decode('utf-8-sig').splitlines()
+    leitor = csv.reader(linhas, delimiter=';')
+    next(leitor, None)
+
+    banco = conectar()
+    cursor = banco.cursor()
+
+    try:
+        for linha in leitor:
+            if len(linha) < 5:
+                continue
+
+            item = linha[1]
+            descricao = linha[2]
+            quantidade = int(linha[3])
+            imagem = linha[4]
+
+            cursor.execute(
+                """INSERT INTO estoque
+                (item, descricao, quantidade, imagem)
+                VALUES (%s, %s, %s, %s)""",
+                (item, descricao, quantidade, imagem)
+            )
+
+        banco.commit()
+
+    except Exception:
+        banco.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        banco.close()
+
+    return """
+    <script>
+        alert("CSV importado com sucesso!");
+        window.location.href="/estoque.html";
+    </script>
+    """
+
 
 # =========================================================
 # EXCLUIR ESTOQUE
