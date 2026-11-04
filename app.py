@@ -502,17 +502,39 @@ def importar_csv():
             if len(linha) < 5:
                 continue
 
-            item = linha[1]
-            descricao = linha[2]
+            # Ignora o ID antigo do CSV
+            item = linha[1].strip()
+            descricao = linha[2].strip()
             quantidade = int(linha[3])
-            imagem = linha[4]
+            imagem = linha[4].strip()
 
+            if not item:
+                continue
+
+            # Verifica se o produto já existe
             cursor.execute(
-                """INSERT INTO estoque
-                (item, descricao, quantidade, imagem)
-                VALUES (%s, %s, %s, %s)""",
-                (item, descricao, quantidade, imagem)
+                "SELECT id FROM estoque WHERE item = %s LIMIT 1",
+                (item,)
             )
+
+            existente = cursor.fetchone()
+
+            if existente:
+                # Soma a quantidade
+                cursor.execute(
+                    """UPDATE estoque
+                    SET quantidade = quantidade + %s
+                    WHERE id = %s""",
+                    (quantidade, existente[0])
+                )
+            else:
+                # Cadastra produto novo
+                cursor.execute(
+                    """INSERT INTO estoque
+                    (item, descricao, quantidade, imagem)
+                    VALUES (%s, %s, %s, %s)""",
+                    (item, descricao, quantidade, imagem)
+                )
 
         banco.commit()
 
@@ -530,6 +552,7 @@ def importar_csv():
         window.location.href="/estoque.html";
     </script>
     """
+
 
 
 # =========================================================
