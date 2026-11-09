@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-const IP_COMPUTADOR = '10.154.50.225';
+const IP_COMPUTADOR = '10.154.76.233';
 const API_URL = `http://${IP_COMPUTADOR}:5000`;
 
 export default function RetirarScreen() {

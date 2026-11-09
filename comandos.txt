@@ -20,6 +20,8 @@ npx expo install expo-image-picker expo-file-system expo-router react-native-saf
 
 npx expo start --clear
 
+npx expo start --lan --clear
+
 npx expo start --clear --tunnel ngrok
 
 npx expo install --check (ver as versoes)
