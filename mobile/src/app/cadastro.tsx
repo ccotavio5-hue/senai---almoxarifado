@@ -6,13 +6,24 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-const IP_COMPUTADOR = '10.154.76.233';
-const API_URL = `http://${IP_COMPUTADOR}:5000/api/criarconta`;
+const IP_COMPUTADOR = '10.154.76.51';
+const API_URL = Platform.OS === 'web'
+  ? 'http://localhost:5000/api/criarconta'
+  : `http://${IP_COMPUTADOR}:5000/api/criarconta`;
+
+const avisar = (titulo: string, mensagem: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${titulo}\n\n${mensagem}`);
+  } else {
+    Alert.alert(titulo, mensagem);
+  }
+};
 
 export default function CadastroScreen() {
   const [usuario, setUsuario] = useState('');
@@ -22,7 +33,7 @@ export default function CadastroScreen() {
 
   const handleCadastro = async () => {
     if (!usuario.trim() || !senha.trim()) {
-      Alert.alert('Atenção', 'Por favor, preencha todos os campos.');
+      avisar('Atenção', 'Por favor, preencha todos os campos.');
       return;
     }
 
@@ -40,14 +51,19 @@ export default function CadastroScreen() {
       const data = await response.json();
 
       if (response.ok && data.sucesso) {
-        Alert.alert('Sucesso', 'Usuário cadastrado com sucesso!', [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
+        if (Platform.OS === 'web') {
+          avisar('Sucesso', 'Usuário cadastrado com sucesso!');
+          router.back();
+        } else {
+          Alert.alert('Sucesso', 'Usuário cadastrado com sucesso!', [
+            { text: 'OK', onPress: () => router.back() }
+          ]);
+        }
       } else {
-        Alert.alert('Erro', data.mensagem || 'Falha ao cadastrar usuário.');
+        avisar('Erro', data.mensagem || 'Falha ao cadastrar usuário.');
       }
     } catch (error) {
-      Alert.alert('Erro de Conexão', 'Não foi possível conectar ao servidor.');
+      avisar('Erro de Conexão', 'Não foi possível conectar ao servidor.');
     } finally {
       setLoading(false);
     }

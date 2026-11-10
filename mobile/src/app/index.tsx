@@ -7,14 +7,25 @@ import {
   TouchableOpacity, 
   Alert, 
   ActivityIndicator,
-  StatusBar
+  StatusBar,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 // IP da sua máquina
-const IP_COMPUTADOR = '10.154.76.233';
-const API_URL = `http://${IP_COMPUTADOR}:5000/api/login`;
+const IP_COMPUTADOR = '10.154.76.51';
+const API_URL = Platform.OS === 'web'
+  ? 'http://localhost:5000/api/login'
+  : `http://${IP_COMPUTADOR}:5000/api/login`;
+
+const avisar = (titulo: string, mensagem: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${titulo}\n\n${mensagem}`);
+  } else {
+    Alert.alert(titulo, mensagem);
+  }
+};
 
 export default function LoginScreen() {
   const [usuario, setUsuario] = useState('');
@@ -25,7 +36,7 @@ export default function LoginScreen() {
   // 1. Botão ENTRAR (Acessa o sistema / estoque)
   const handleLogin = async () => {
     if (!usuario.trim() || !senha.trim()) {
-      Alert.alert('Atenção', 'Por favor, preencha o usuário e a senha.');
+      avisar('Atenção', 'Por favor, preencha o usuário e a senha.');
       return;
     }
 
@@ -41,20 +52,21 @@ export default function LoginScreen() {
       const data = await response.json();
 
       if (response.ok && data.sucesso) {
-        Alert.alert(
-          'Sucesso!', 
-          `Bem-vindo, ${usuario}! (${data.tipo === 'adm' ? 'Administrador' : 'Usuário'})`,
-          [{ text: 'Continuar', onPress: () => router.replace('/home') }]
-        );
+        if (Platform.OS === 'web') {
+          router.replace('/home');
+        } else {
+          Alert.alert(
+            'Sucesso!',
+            `Bem-vindo, ${usuario}! (${data.tipo === 'adm' ? 'Administrador' : 'Usuário'})`,
+            [{ text: 'Continuar', onPress: () => router.replace('/home') }]
+          );
+        }
       } else {
-        Alert.alert('Erro no Login', data.mensagem || 'Usuário ou senha incorretos.');
+        avisar('Erro no Login', data.mensagem || 'Usuário ou senha incorretos.');
       }
     } catch (error) {
       console.error('Erro ao conectar na API:', error);
-      Alert.alert(
-        'Erro de Conexão', 
-        'Não foi possível conectar ao servidor Flask. Verifique o Firewall.'
-      );
+      avisar('Erro de Conexão', 'Não foi possível conectar ao servidor Flask. Verifique o Firewall.');
     } finally {
       setLoading(false);
     }
@@ -63,7 +75,7 @@ export default function LoginScreen() {
   // 2. Botão CADASTRE-SE ADM (Valida se o usuário digitado é ADM e vai para a tela de cadastro)
   const handleIrParaCadastro = async () => {
     if (!usuario.trim() || !senha.trim()) {
-      Alert.alert('Atenção', 'Preencha o Usuário e a Senha de Administrador nos campos acima para prosseguir.');
+      avisar('Atenção', 'Preencha o Usuário e a Senha de Administrador nos campos acima para prosseguir.');
       return;
     }
 
@@ -83,14 +95,14 @@ export default function LoginScreen() {
         if (data.tipo === 'adm' || data.e_adm === true) {
           router.push('/cadastro'); // Redireciona para o cadastro
         } else {
-          Alert.alert('Acesso Negado', 'Apenas usuários Administradores podem acessar a página de cadastro.');
+          avisar('Acesso Negado', 'Apenas usuários Administradores podem acessar a página de cadastro.');
         }
       } else {
-        Alert.alert('Erro de Autenticação', data.mensagem || 'Usuário ou senha incorretos.');
+        avisar('Erro de Autenticação', data.mensagem || 'Usuário ou senha incorretos.');
       }
     } catch (error) {
       console.error('Erro ao conectar na API:', error);
-      Alert.alert('Erro de Conexão', 'Não foi possível conectar ao servidor Flask.');
+      avisar('Erro de Conexão', 'Não foi possível conectar ao servidor Flask.');
     } finally {
       setLoading(false);
     }

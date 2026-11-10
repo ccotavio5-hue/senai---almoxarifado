@@ -1,8 +1,9 @@
 
+
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Image, Alert, ScrollView, ActivityIndicator, StatusBar
+  Image, Alert, ScrollView, ActivityIndicator, StatusBar, Platform, 
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { File } from 'expo-file-system';
@@ -10,7 +11,19 @@ import { fetch } from 'expo/fetch';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-const API_URL = 'http://10.154.76.233:5000';
+// No navegador, o Flask roda no próprio PC; no Expo Go, usamos o IP da rede.
+const IP_COMPUTADOR = '10.154.76.51';
+const API_URL = Platform.OS === 'web'
+  ? 'http://localhost:5000'
+  : `http://${IP_COMPUTADOR}:5000`;
+
+const avisar = (titulo: string, mensagem: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${titulo}\n\n${mensagem}`);
+  } else {
+    Alert.alert(titulo, mensagem);
+  }
+};
 
 const abas = [
   { nome: 'Estoque', rota: '/home' },
@@ -26,32 +39,38 @@ export default function AdicionarItemScreen() {
   const [quantidade, setQuantidade] = useState('');
   const [descricao, setDescricao] = useState('');
   const [imagemUri, setImagemUri] = useState<string | null>(null);
+  const [imagemNome, setImagemNome] = useState<string>('produto.jpg');
   const [carregando, setCarregando] = useState(false);
 
   const selecionarImagem = async () => {
     try {
-      const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissao.granted) {
-        Alert.alert('Atenção', 'Permita o acesso às fotos.');
-        return;
+      // A versão web abre o seletor do navegador, sem permissão nativa.
+      if (Platform.OS !== 'web') {
+        const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permissao.granted) {
+          avisar('Atenção', 'Permita o acesso às fotos.');
+          return;
+        }
       }
 
       const resultado = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'], allowsEditing: true,
+        mediaTypes: ['images'], allowsEditing: Platform.OS !== 'web',
         aspect: [4, 3], quality: 0.8
       });
 
-      if (!resultado.canceled && resultado.assets.length)
+      if (!resultado.canceled && resultado.assets.length) {
         setImagemUri(resultado.assets[0].uri);
+        setImagemNome(resultado.assets[0].fileName || 'produto.jpg');
+      }
     } catch {
-      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+      avisar('Erro', 'Não foi possível selecionar a imagem.');
     }
   };
 
   const salvarItem = async () => {
     const numero = Number(quantidade.trim());
     if (!item.trim() || !Number.isInteger(numero) || numero <= 0) {
-      Alert.alert('Atenção', 'Informe o nome e uma quantidade válida.');
+      avisar('Atenção', 'Informe o nome e uma quantidade válida.');
       return;
     }
 
@@ -63,16 +82,31 @@ export default function AdicionarItemScreen() {
       dados.append('descricao', descricao.trim());
 
       if (imagemUri) {
-        const foto = new File(imagemUri);
-        if (!foto.exists) throw new Error('Imagem não encontrada.');
-        if (foto.size > 16 * 1024 * 1024)
-          throw new Error('A imagem deve ter menos de 16 MB.');
-        dados.append('imagem', foto, foto.name);
+        if (Platform.OS === 'web') {
+          // Expo Web utiliza Blob/FormData do navegador para enviar a foto.
+          const respostaFoto = await globalThis.fetch(imagemUri);
+          if (!respostaFoto.ok) throw new Error('Não foi possível ler a foto.');
+          const foto = await respostaFoto.blob();
+          if (foto.size > 16 * 1024 * 1024)
+            throw new Error('A imagem deve ter menos de 16 MB.');
+          dados.append('imagem', foto, imagemNome);
+        } else {
+          // Mantém o envio de foto que já funciona no Expo Go.
+          const foto = new File(imagemUri);
+          if (!foto.exists) throw new Error('Imagem não encontrada.');
+          if (foto.size > 16 * 1024 * 1024)
+                        throw new Error('A imagem deve ter menos de 16 MB.');
+          dados.append('imagem', foto, foto.name);
+        }
       }
 
-      const resposta = await fetch(`${API_URL}/api/adicionar`, {
-        method: 'POST', body: dados
-      });
+      const resposta = Platform.OS === 'web'
+        ? await globalThis.fetch(`${API_URL}/api/adicionar`, {
+            method: 'POST', body: dados
+          })
+        : await fetch(`${API_URL}/api/adicionar`, {
+            method: 'POST', body: dados
+          });
 
       const resultado = await resposta.json().catch(() => {
         throw new Error(`Erro do servidor: HTTP ${resposta.status}`);
@@ -85,11 +119,17 @@ export default function AdicionarItemScreen() {
       setQuantidade('');
       setDescricao('');
       setImagemUri(null);
-      Alert.alert('Sucesso', resultado.mensagem || 'Produto cadastrado!', [
-        { text: 'OK', onPress: () => router.push('/home') }
-      ]);
+      setImagemNome('produto.jpg');
+      if (Platform.OS === 'web') {
+        avisar('Sucesso', resultado.mensagem || 'Produto cadastrado!');
+        router.replace('/home');
+      } else {
+        Alert.alert('Sucesso', resultado.mensagem || 'Produto cadastrado!', [
+          { text: 'OK', onPress: () => router.push('/home') }
+        ]);
+      }
     } catch (erro) {
-      Alert.alert('Erro ao salvar',
+      avisar('Erro ao salvar',
         erro instanceof Error ? erro.message : 'Falha no cadastro.');
     } finally {
       setCarregando(false);
@@ -173,3 +213,4 @@ const styles = StyleSheet.create({
   btnSalvar: { backgroundColor: '#005CA9', paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginTop: 8 },
   btnText: { color: '#FFF', fontSize: 15, fontWeight: 'bold' }
 });
+

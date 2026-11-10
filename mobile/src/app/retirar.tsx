@@ -9,12 +9,23 @@ import {
   ActivityIndicator,
   StatusBar,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-const IP_COMPUTADOR = '10.154.76.233';
-const API_URL = `http://${IP_COMPUTADOR}:5000`;
+const IP_COMPUTADOR = '10.154.76.51';
+const API_URL = Platform.OS === 'web'
+  ? 'http://localhost:5000'
+  : `http://${IP_COMPUTADOR}:5000`;
+
+const avisar = (titulo: string, mensagem: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${titulo}\n\n${mensagem}`);
+  } else {
+    Alert.alert(titulo, mensagem);
+  }
+};
 
 export default function RetirarScreen() {
   const router = useRouter();
@@ -25,7 +36,14 @@ export default function RetirarScreen() {
 
   const handleRetirar = async () => {
     if (!itemId.trim() || !quantidade.trim() || !pessoa.trim()) {
-      Alert.alert('Atenção', 'Preencha todos os campos obrigatórios.');
+      avisar('Atenção', 'Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    const id = Number(itemId.trim());
+    const qtd = Number(quantidade.trim());
+    if (!Number.isInteger(id) || id <= 0 || !Number.isInteger(qtd) || qtd <= 0) {
+      avisar('Atenção', 'Informe um ID e uma quantidade válidos.');
       return;
     }
 
@@ -36,8 +54,8 @@ export default function RetirarScreen() {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: parseInt(itemId, 10),
-          quantidade: parseInt(quantidade, 10),
+          id,
+          quantidade: qtd,
           pessoa: pessoa.trim(),
         }),
       });
@@ -45,14 +63,19 @@ export default function RetirarScreen() {
       const data = await response.json();
 
       if (response.ok && data.sucesso) {
-        Alert.alert('Sucesso', data.mensagem || 'Retirada realizada!', [
-          { text: 'OK', onPress: () => router.push('/home') },
-        ]);
+        if (Platform.OS === 'web') {
+          avisar('Sucesso', data.mensagem || 'Retirada realizada!');
+          router.replace('/home');
+        } else {
+          Alert.alert('Sucesso', data.mensagem || 'Retirada realizada!', [
+            { text: 'OK', onPress: () => router.push('/home') },
+          ]);
+        }
       } else {
-        Alert.alert('Erro', data.mensagem || 'Não foi possível realizar a retirada.');
+        avisar('Erro', data.mensagem || 'Não foi possível realizar a retirada.');
       }
     } catch (error) {
-      Alert.alert('Erro de Conexão', 'Não foi possível conectar ao servidor.');
+      avisar('Erro de Conexão', 'Não foi possível conectar ao servidor.');
     } finally {
       setLoading(false);
     }

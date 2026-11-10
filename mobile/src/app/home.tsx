@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, Image, FlatList, TouchableOpacity,
-  Alert, Modal, StyleSheet, ActivityIndicator
+  Alert, Modal, StyleSheet, ActivityIndicator, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -11,7 +11,9 @@ import * as FS from 'expo-file-system';
 import * as LegacyFS from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
-const API = 'http://10.154.76.233:5000';
+const API = Platform.OS === 'web'
+  ? 'http://localhost:5000'
+  : 'http://10.154.76.51:5000';
 const AZUL = '#005CA9';
 
 type Produto = {
@@ -191,7 +193,8 @@ export default function HomeScreen() {
 
       <Text style={s.total}>Total: {itens.length} itens</Text>
 
-      {loading ? <ActivityIndicator color={AZUL} /> : (
+      <View style={{ flex: 1 }}>
+        {loading ? <ActivityIndicator color={AZUL} /> : (
         <FlatList
           data={itens}
           keyExtractor={i => String(i.id)}
@@ -219,7 +222,14 @@ export default function HomeScreen() {
             );
           }}
         />
-      )}
+        )}
+      </View>
+
+      <View style={s.rodape}>
+        <TouchableOpacity style={s.voltarLogin} onPress={() => router.replace('/')}>
+          <Text style={s.voltarLoginTexto}>Voltar ao Login</Text>
+        </TouchableOpacity>
+      </View>
 
       <Modal
         visible={!!foto}
@@ -242,6 +252,9 @@ const s = StyleSheet.create({
   tela: { flex: 1, backgroundColor: '#F4F6F8' },
   header: { backgroundColor: AZUL, padding: 18, alignItems: 'center' },
   titulo: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
+  rodape: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#F4F6F8', alignItems: 'center' },
+  voltarLogin: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 6, backgroundColor: '#FFF', borderWidth: 1, borderColor: AZUL, alignItems: 'center', width: '100%', maxWidth: 320 },
+  voltarLoginTexto: { color: AZUL, fontSize: 13, fontWeight: 'bold' },
   branco: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
   menu: { flexDirection: 'row', backgroundColor: '#FFF' },
   aba: { flex: 1, paddingVertical: 15, alignItems: 'center', borderBottomWidth: 3, borderBottomColor: 'transparent' },

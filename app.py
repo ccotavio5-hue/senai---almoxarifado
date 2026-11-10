@@ -10,6 +10,13 @@ import csv
 
 app = Flask(__name__)
 
+
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:8081"]
+    }
+})
+
 # Chave da sessão
 app.secret_key = os.getenv("SECRET_KEY", "senha_super_secreta")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
