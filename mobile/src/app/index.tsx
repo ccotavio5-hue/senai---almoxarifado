@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 // IP da sua máquina
-const IP_COMPUTADOR = '10.154.76.51';
+const IP_COMPUTADOR = '10.154.76.159';
 const API_URL = Platform.OS === 'web'
   ? 'http://localhost:5000/api/login'
   : `http://${IP_COMPUTADOR}:5000/api/login`;

@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 // No navegador, o Flask roda no próprio PC; no Expo Go, usamos o IP da rede.
-const IP_COMPUTADOR = '10.154.76.51';
+const IP_COMPUTADOR = '10.154.76.159';
 const API_URL = Platform.OS === 'web'
   ? 'http://localhost:5000'
   : `http://${IP_COMPUTADOR}:5000`;

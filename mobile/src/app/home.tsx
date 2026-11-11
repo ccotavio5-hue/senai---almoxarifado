@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, Image, FlatList, TouchableOpacity,
-  Alert, Modal, StyleSheet, ActivityIndicator, Platform
+  Alert, Modal, StyleSheet, ActivityIndicator, Platform, Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -13,8 +13,17 @@ import * as Sharing from 'expo-sharing';
 
 const API = Platform.OS === 'web'
   ? 'http://localhost:5000'
-  : 'http://10.154.76.51:5000';
+  : 'http://10.154.76.159:5000';
 const AZUL = '#005CA9';
+
+// Alert.alert nao abre mensagens no Expo Web.
+const avisar = (titulo: string, mensagem: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${titulo}\n\n${mensagem}`);
+  } else {
+    Alert.alert(titulo, mensagem);
+  }
+};
 
 type Produto = {
   id: number; item: string; descricao: string;
@@ -36,7 +45,7 @@ export default function HomeScreen() {
       if (!r.ok || !d.sucesso) throw Error();
       setItens(d.estoque || []);
     } catch {
-      Alert.alert('Erro', 'Não foi possível carregar o estoque.');
+      avisar('Erro', 'Não foi possível carregar o estoque.');
     } finally {
       setLoading(false);
     }
@@ -46,9 +55,14 @@ export default function HomeScreen() {
     carregar();
   }, [carregar]));
 
-  // Cria e compartilha o CSV no celular.
+  // Navegador: baixa o CSV gerado pelo Flask. Celular: compartilha como antes.
   const exportar = async () => {
     try {
+      if (Platform.OS === 'web') {
+        await Linking.openURL(`${API}/api/exportar-csv`);
+        return;
+      }
+
       const esc = (v: unknown) =>
         `"${String(v ?? '').replace(/"/g, '""')}"`;
       const linhas = itens.map(i =>
@@ -61,8 +75,8 @@ export default function HomeScreen() {
       const arq = new FS.File(FS.Paths.cache, 'estoque.csv');
       arq.write(csv);
       await Sharing.shareAsync(arq.uri, { mimeType: 'text/csv' });
-    } catch {
-      Alert.alert('Erro', 'Falha ao exportar CSV.');
+    } catch (erro) {
+      avisar('Erro', erro instanceof Error ? erro.message : 'Falha ao exportar CSV.');
     }
   };
 
@@ -84,7 +98,6 @@ export default function HomeScreen() {
 
   const importar = async () => {
     try {
-      // Mantém o URI original do seletor do Android (content://).
       const doc = await Picker.getDocumentAsync({
         type: ['text/csv', 'text/comma-separated-values', 'application/vnd.ms-excel', '*/*'],
         copyToCacheDirectory: false,
@@ -92,64 +105,85 @@ export default function HomeScreen() {
       if (doc.canceled || !doc.assets?.length) return;
       const arquivo = doc.assets[0];
       if (!arquivo.name.toLowerCase().endsWith('.csv')) {
-        Alert.alert('Arquivo inválido', 'Selecione um arquivo .csv');
+        avisar('Arquivo inválido', 'Selecione um arquivo .csv');
         return;
       }
       setOcupado(true);
       let texto: string;
-      try {
-        // O Storage Access Framework lê URIs de documentos Android.
-        texto = await LegacyFS.readAsStringAsync(arquivo.uri, {
-          encoding: LegacyFS.EncodingType.UTF8,
-        });
-      } catch (erroLeitura) {
-        try {
-          // Alternativa para provedores que disponibilizam o URI via fetch.
+
+      if (Platform.OS === 'web') {
+        // O seletor do navegador disponibiliza um File, nao um arquivo do Android.
+        const arquivoWeb = (arquivo as typeof arquivo & {
+          file?: { text: () => Promise<string> };
+        }).file;
+        if (arquivoWeb) {
+          texto = await arquivoWeb.text();
+        } else {
           const respostaArquivo = await fetch(arquivo.uri);
-          if (!respostaArquivo.ok) throw new Error('Arquivo inacessível');
+          if (!respostaArquivo.ok) throw new Error('Não foi possível ler o arquivo CSV.');
           texto = await respostaArquivo.text();
-        } catch {
-          throw new Error('O Android não permitiu ler o CSV selecionado. ' +
-            'Tente escolher o arquivo pelo app Arquivos, em Downloads. ' +
-            'Detalhe: ' + String(erroLeitura));
+        }
+      } else {
+        // Mantem o jeito que ja funcionava no Expo Go (Android).
+        try {
+          texto = await LegacyFS.readAsStringAsync(arquivo.uri, {
+            encoding: LegacyFS.EncodingType.UTF8,
+          });
+        } catch (erroLeitura) {
+          try {
+            const respostaArquivo = await fetch(arquivo.uri);
+            if (!respostaArquivo.ok) throw new Error('Arquivo inacessível');
+            texto = await respostaArquivo.text();
+          } catch {
+            throw new Error('O Android não permitiu ler o CSV selecionado. ' +
+              'Tente escolher o arquivo pelo app Arquivos, em Downloads. ' +
+              'Detalhe: ' + String(erroLeitura));
+          }
         }
       }
+
       const mensagem = await enviarCSV(texto);
-      Alert.alert('Sucesso', mensagem);
+      avisar('Sucesso', mensagem);
     } catch (erro) {
-      Alert.alert('Erro ao importar', erro instanceof Error ? erro.message : 'Erro desconhecido.');
+      avisar('Erro ao importar', erro instanceof Error ? erro.message : 'Erro desconhecido.');
     } finally {
       setOcupado(false);
     }
   };
 
-  // Exclui todo o estoque, somente depois de confirmar.
-  const excluirTabela = () => Alert.alert(
-    'Excluir tabela',
-    'Tem certeza que deseja apagar TODOS os produtos do estoque?',
-    [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir tudo', style: 'destructive',
-        onPress: async () => {
-          setOcupado(true);
-          try {
-            const r = await fetch(`${API}/api/estoque`, { method: 'DELETE' });
-            const d = await r.json();
-            if (!r.ok || !d.sucesso) {
-              throw Error(d.mensagem || d.erro || `Erro HTTP ${r.status}`);
-            }
-            await carregar();
-            Alert.alert('Pronto', 'Estoque excluído com sucesso.');
-          } catch (erro) {
-            Alert.alert('Erro ao excluir', erro instanceof Error ? erro.message : 'Confira a conexão com o Flask.');
-          } finally {
-            setOcupado(false);
-          }
-        }
+  // A exclusao exige login como administrador (inclusive no navegador).
+  const apagarEstoque = async () => {
+    setOcupado(true);
+    try {
+      const r = await fetch(`${API}/api/estoque`, {
+        method: 'DELETE',
+        // Expo Web precisa enviar o cookie da sessao de login ao Flask.
+        ...(Platform.OS === 'web' ? { credentials: 'include' as const } : {}),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.sucesso) {
+        throw new Error(d.mensagem || d.erro || `Erro HTTP ${r.status}`);
       }
-    ]
-  );
+      await carregar();
+      avisar('Pronto', 'Estoque excluído com sucesso.');
+    } catch (erro) {
+      avisar('Erro ao excluir', erro instanceof Error ? erro.message : 'Confira a conexão com o Flask.');
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const excluirTabela = () => {
+    const pergunta = 'Tem certeza que deseja apagar TODOS os produtos do estoque?';
+    if (Platform.OS === 'web') {
+      if (window.confirm(pergunta)) void apagarEstoque();
+      return;
+    }
+    Alert.alert('Excluir tabela', pergunta, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir tudo', style: 'destructive', onPress: () => { void apagarEstoque(); } },
+    ]);
+  };
 
   const botao = (texto: string, cor: string, acao: () => void) => (
     <TouchableOpacity

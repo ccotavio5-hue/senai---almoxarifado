@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-const IP_COMPUTADOR = '10.154.76.51';
+const IP_COMPUTADOR = '10.154.76.159';
 const API_URL = Platform.OS === 'web'
   ? 'http://localhost:5000/api/criarconta'
   : `http://${IP_COMPUTADOR}:5000/api/criarconta`;
